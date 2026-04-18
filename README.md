@@ -8,15 +8,33 @@ PiumaMD è un editor Markdown moderno e minimale, progettato per offrire un'espe
 
 ---
 
+---
+
 ## 🚀 Caratteristiche Principali
 
 - 🖋️ **Editing Professionale**: Basato su CodeMirror 6 con evidenziazione della sintassi Markdown.
-- 📊 **Diagrammi Dinamici**: Supporto integrato per **Mermaid.js** (diagrammi di flusso, sequenze, gantt).
-- 🧪 **Matematica Perfetta**: Rendering ad alta fedeltà di formule LaTeX tramite **KaTeX**.
-- 🛠️ **Gestione Progetti**: Esplora le tue cartelle con una Sidebar ridimensionabile e gestisci più file contemporaneamente con il sistema a Tab.
-- 🌙 **Design Moderno**: Interfaccia Material Design 3 con modalità scura e palette "Natura" personalizzabili.
-- 💾 **Sicurezza dei Dati**: Auto-save intelligente ogni 10 secondi e scorciatoie da tastiera native (`Ctrl+S`).
-- 🌐 **Esportazione**: Converti i tuoi documenti in **PDF** (tramite stampa nativa) o **HTML** con un clic.
+- 🌈 **Multi-Theme**: Collezione di temi popolari (Dracula, Nord, Midnight, Solarized, GitHub).
+- 📊 **Diagrammi Dinamici**: Supporto integrato per **Mermaid.js**.
+- 🧪 **Matematica Perfetta**: Rendering LaTeX tramite **KaTeX**.
+- 🛠️ **Gestione Progetti**: Sidebar ridimensionabile e sistema a Tab.
+- 💾 **Salvataggio Sicuro**: Controllo manuale o Autosave intelligente per file esistenti.
+- 🌐 **Esportazione**: Converti i tuoi documenti in **PDF** o **HTML** con un clic.
+
+---
+
+## ⚠️ Sicurezza e Installazione
+
+PiumaMD è un progetto indipendente e open source. Per questo motivo, gli eseguibili per **Windows** e **macOS** non sono firmati con certificati a pagamento degli store ufficiali.
+
+#### 🪟 Windows (SmartScreen)
+Al primo avvio, Windows potrebbe mostrare un avviso di "PC protetto da Windows SmartScreen".
+- Clicca su **"Ulteriori informazioni"**.
+- Clicca su **"Esegui comunque"**.
+
+#### 🍎 macOS
+Su macOS, potresti vedere un messaggio che indica che l'app "non può essere aperta perché lo sviluppatore non è verificato".
+- Vai in **Impostazioni di Sistema** > **Privacy e Sicurezza**.
+- Scorri fino alla sezione Sicurezza e clicca su **"Apri comunque"**.
 
 ---
 

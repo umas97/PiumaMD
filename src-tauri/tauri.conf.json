@@ -1,8 +1,8 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
-  "productName": "pimamd",
-  "version": "0.1.0",
-  "identifier": "com.umas97.pimamd",
+  "productName": "PiumaMD",
+  "version": "1.0.0",
+  "identifier": "com.umas97.piumamd",
   "build": {
     "beforeDevCommand": "npm run dev",
     "devUrl": "http://localhost:1420",

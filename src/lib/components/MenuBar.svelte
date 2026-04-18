@@ -269,7 +269,7 @@
                 closeMenus();
                 openUrl("https://github.com/umas97/PiumaMD");
               }}
-              class="mt-3 flex items-center gap-2 px-3 py-1.5 bg-surface-variant/20 hover:bg-primary/10 rounded-full border border-outline/5 transition-all text-[10px] font-bold uppercase tracking-widest text-primary"
+              class="mt-3 w-full flex items-center justify-center gap-2 px-3 py-1.5 bg-surface-variant/20 hover:bg-primary/10 rounded-full border border-outline/5 transition-all text-[10px] font-bold uppercase tracking-widest text-primary"
             >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
@@ -286,6 +286,30 @@
                 ></path><path d="M9 18c-4.51 2-5-2-7-2"></path></svg
               >
               GitHub Project
+            </button>
+
+            <button
+              onclick={() => {
+                closeMenus();
+                openUrl("https://github.com/umas97/PiumaMD/issues");
+              }}
+              class="mt-2 w-full flex items-center justify-center gap-2 px-3 py-1.5 bg-surface-variant/20 hover:bg-orange-500/10 rounded-full border border-outline/5 transition-all text-[10px] font-bold uppercase tracking-widest text-orange-500"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="14"
+                height="14"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                ><path
+                  d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"
+                ></path><path d="M12 9v4"></path><path d="M12 17h.01"></path></svg
+              >
+              Report Issue
             </button>
           </div>
         </div>
