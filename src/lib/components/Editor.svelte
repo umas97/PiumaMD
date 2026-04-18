@@ -78,6 +78,15 @@
 			parent: editorContainer
 		});
 
+		// Focus automatico e cursore sulla prima riga al montaggio
+		setTimeout(() => {
+			view.focus();
+			view.dispatch({
+				selection: { anchor: 0, head: 0 },
+				scrollIntoView: true
+			});
+		}, 100);
+
 		// Inizializzazione Listener Nativo Tauri per il Drag & Drop
 		if (isTauri()) {
 			try {

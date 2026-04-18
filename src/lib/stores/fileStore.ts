@@ -47,11 +47,7 @@ if (typeof window !== 'undefined') {
 	if (savedRecent) {
 		try { recentFiles.set(JSON.parse(savedRecent)); } catch (e) {}
 	}
-
-	const savedAutosave = localStorage.getItem('autosaveEnabled');
-	if (savedAutosave !== null) {
-		autosaveEnabled.set(savedAutosave === 'true');
-	}
+	// Nota: autosaveEnabled non viene caricato per scelta dell'utente (sempre OFF all'avvio)
 }
 
 // Persistenza preferenze
