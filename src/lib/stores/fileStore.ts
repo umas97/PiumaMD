@@ -1,13 +1,23 @@
 import { writable, get } from 'svelte/store';
 import { invoke } from '@tauri-apps/api/core';
 import { open, save } from '@tauri-apps/plugin-dialog';
-import { writeTextFile } from '@tauri-apps/plugin-fs';
+
+// Helper robusto per rilevare se siamo in ambiente Tauri v2
+const isTauri = () => {
+	try {
+		return typeof window !== 'undefined' && 
+			   ((window as any).__TAURI_INTERNALS__ !== undefined || 
+			    (window as any).__TAURI_METADATA__ !== undefined);
+	} catch (e) {
+		return false;
+	}
+};
 
 export interface FileEntry {
-	name: string;
-	path: string;
-	is_dir: boolean;
-	children?: FileEntry[];
+	name: string,
+	path: string,
+	is_dir: boolean,
+	children?: FileEntry[],
 }
 
 export interface OpenedFile {
@@ -28,17 +38,28 @@ export const openedFiles = writable<OpenedFile[]>([]);
 export const activeFile = writable<string | null>(null);
 export const recentFiles = writable<string[]>([]);
 
-// Carica file recenti all'avvio
+// NUOVO: Stato Autosave (disattivato di default)
+export const autosaveEnabled = writable<boolean>(false);
+
+// Carica preferenze all'avvio
 if (typeof window !== 'undefined') {
-	const saved = localStorage.getItem('recentFiles');
-	if (saved) {
-		try {
-			recentFiles.set(JSON.parse(saved));
-		} catch (e) {
-			console.error("Errore recente:", e);
-		}
+	const savedRecent = localStorage.getItem('recentFiles');
+	if (savedRecent) {
+		try { recentFiles.set(JSON.parse(savedRecent)); } catch (e) {}
+	}
+
+	const savedAutosave = localStorage.getItem('autosaveEnabled');
+	if (savedAutosave !== null) {
+		autosaveEnabled.set(savedAutosave === 'true');
 	}
 }
+
+// Persistenza preferenze
+autosaveEnabled.subscribe(value => {
+	if (typeof window !== 'undefined') {
+		localStorage.setItem('autosaveEnabled', String(value));
+	}
+});
 
 function addRecentFile(path: string) {
 	if (path.startsWith(UNSAVED_PREFIX)) return;
@@ -49,9 +70,6 @@ function addRecentFile(path: string) {
 	});
 }
 
-/**
- * Crea un nuovo file vuoto in memoria
- */
 export function createNewFile() {
 	const id = newFileCounter++;
 	const path = `${UNSAVED_PREFIX}${id}`;
@@ -70,23 +88,25 @@ let saveTimeout: ReturnType<typeof setTimeout>;
  * Salva un file. Se è nuovo, chiede il percorso.
  */
 export async function saveFile(path: string, content: string) {
+	if (!isTauri()) return;
+
+	console.log(`[SaveFile] Esecuzione per: ${path}`);
+
 	try {
 		let targetPath = path;
 
-		// Se il file è nuovo, chiediamo dove salvarlo
 		if (path.startsWith(UNSAVED_PREFIX)) {
 			const selectedPath = await save({
 				filters: [{ name: 'Markdown', extensions: ['md'] }],
 				defaultPath: 'Senza nome.md'
 			});
 
-			if (!selectedPath) return; // Utente ha annullato
+			if (!selectedPath) return;
 			targetPath = selectedPath;
 			
-			// Scriviamo il file fisicamente
-			await writeTextFile(targetPath, content);
+			// Usiamo il comando Rust per scrivere il file (più robusto)
+			await invoke('save_markdown_file', { path: targetPath, content });
 			
-			// Aggiorniamo l'entry nello store per farlo diventare un file reale
 			openedFiles.update(files => files.map(f => 
 				f.path === path ? { 
 					...f, 
@@ -97,22 +117,18 @@ export async function saveFile(path: string, content: string) {
 				} : f
 			));
 			
-			// Se era il file attivo, aggiorniamo il puntatore
-			if (get(activeFile) === path) {
-				activeFile.set(targetPath);
-			}
+			activeFile.update(current => current === path ? targetPath : current);
 			addRecentFile(targetPath);
-			console.log(`Nuovo file creato e salvato in: ${targetPath}`);
+			console.log(`[SaveFile] Nuovo file creato: ${targetPath}`);
 		} else {
-			// Salvataggio standard
 			await invoke('save_markdown_file', { path: targetPath, content });
 			openedFiles.update(files => 
 				files.map(f => f.path === targetPath ? { ...f, isModified: false } : f)
 			);
-			console.log(`File aggiornato: ${targetPath}`);
+			console.log(`[SaveFile] Aggiornamento file: ${targetPath}`);
 		}
 	} catch (e) {
-		console.error("Errore salvataggio:", e);
+		console.error("[SaveFile] Errore:", e);
 	}
 }
 
@@ -122,12 +138,17 @@ export function updateFileContent(path: string, newContent: string) {
 	);
 
 	clearTimeout(saveTimeout);
-	saveTimeout = setTimeout(() => {
-		saveFile(path, newContent);
-	}, 10000);
+	
+	// Autosave: solo se abilitato e solo se il file non è nuovo
+	if (get(autosaveEnabled) && !path.startsWith(UNSAVED_PREFIX)) {
+		saveTimeout = setTimeout(() => {
+			saveFile(path, newContent);
+		}, 5000); // Autosave ridotto a 5 secondi per reattività
+	}
 }
 
 export async function openDirectory() {
+	if (!isTauri()) return;
 	try {
 		const selected = await open({ directory: true });
 		if (selected && typeof selected === 'string') {
@@ -139,6 +160,7 @@ export async function openDirectory() {
 }
 
 export async function openFile(path?: string) {
+	if (!isTauri()) return;
 	let filePath = path;
 	try {
 		if (!filePath) {

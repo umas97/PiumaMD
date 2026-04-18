@@ -6,10 +6,14 @@
 	import katex from 'markdown-it-katex';
 	import hljs from 'highlight.js';
 	import mermaid from 'mermaid';
+	import { convertFileSrc } from '@tauri-apps/api/core';
 	import 'highlight.js/styles/tokyo-night-dark.css';
 	import 'katex/dist/katex.min.css';
 
 	let { content = '' } = $props();
+
+	// Helper per rilevare se siamo in ambiente Tauri
+	const isTauri = () => typeof window !== 'undefined' && (window as any).__TAURI_INTERNALS__ !== undefined;
 
 	// Inizializzazione protetta Mermaid
 	if (typeof window !== 'undefined') {
@@ -48,6 +52,29 @@
 	md.use(footnote);
 	md.use(katex);
 
+	// --- CUSTOM RULE PER IMMAGINI (Tauri Asset Protocol) ---
+	const defaultImageRule = md.renderer.rules.image || function (tokens, idx, options, env, self) {
+		return self.renderToken(tokens, idx, options);
+	};
+
+	md.renderer.rules.image = (tokens, idx, options, env, self) => {
+		const token = tokens[idx];
+		const srcIndex = token.attrIndex('src');
+		if (srcIndex !== -1 && token.attrs) {
+			let url = token.attrs[srcIndex][1];
+			
+			// Decodifichiamo l'URL (es. %20 -> spazio) per permettere a Tauri di trovare il file su disco
+			const decodedUrl = decodeURIComponent(url);
+			
+			// Se siamo in Tauri e il percorso sembra locale, lo convertiamo
+			if (isTauri() && (decodedUrl.startsWith('/') || decodedUrl.match(/^[a-zA-Z]:/))) {
+				token.attrs[srcIndex][1] = convertFileSrc(decodedUrl);
+				console.log("Percorso convertito per Tauri:", decodedUrl, "->", token.attrs[srcIndex][1]);
+			}
+		}
+		return defaultImageRule(tokens, idx, options, env, self);
+	};
+
 	// Rendering reattivo Svelte 5
 	let renderedContent = $derived.by(() => {
 		try {
@@ -66,7 +93,9 @@
 		if (typeof window !== 'undefined') {
 			const nodes = document.querySelectorAll('.mermaid');
 			if (nodes.length > 0) {
-				mermaid.run({ nodes }).catch(e => console.error("Mermaid run error:", e));
+				mermaid.run({ 
+					nodes: Array.from(nodes) as HTMLElement[] 
+				}).catch(e => console.error("Mermaid run error:", e));
 			}
 		}
 	});

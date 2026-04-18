@@ -17,7 +17,7 @@
 
 :root {
   /* Palette Default: Material Blue (Light Mode) */
-  --md-sys-color-primary: var(--user-accent-color, #3f51b5);
+  --md-sys-color-primary: #3f51b5;
   --md-sys-color-on-primary: #ffffff;
   --md-sys-color-surface: #fdfbff;
   --md-sys-color-on-surface: #1b1b1f;
@@ -25,21 +25,92 @@
   --md-sys-color-outline: #777680;
 }
 
-/* Dark Mode */
-@media (prefers-color-scheme: dark) {
-  :root {
-    --md-sys-color-primary: #bac3ff;
-    --md-sys-color-on-primary: #001971;
-    --md-sys-color-surface: #1b1b1f;
-    --md-sys-color-on-surface: #e4e2e6;
-    --md-sys-color-surface-variant: #45464f;
-    --md-sys-color-outline: #91909a;
-  }
+/* TEMI SCURI */
+
+.theme-dark {
+  --md-sys-color-primary: #bac3ff;
+  --md-sys-color-on-primary: #001971;
+  --md-sys-color-surface: #1b1b1f;
+  --md-sys-color-on-surface: #e4e2e6;
+  --md-sys-color-surface-variant: #45464f;
+  --md-sys-color-outline: #91909a;
+}
+
+.theme-dracula {
+  --md-sys-color-primary: #bd93f9;
+  --md-sys-color-on-primary: #282a36;
+  --md-sys-color-surface: #282a36;
+  --md-sys-color-on-surface: #f8f8f2;
+  --md-sys-color-surface-variant: #44475a;
+  --md-sys-color-outline: #6272a4;
+}
+
+.theme-nord {
+  --md-sys-color-primary: #88c0d0;
+  --md-sys-color-on-primary: #2e3440;
+  --md-sys-color-surface: #2e3440;
+  --md-sys-color-on-surface: #eceff4;
+  --md-sys-color-surface-variant: #3b4252;
+  --md-sys-color-outline: #4c566a;
+}
+
+.theme-midnight {
+  --md-sys-color-primary: #3b82f6;
+  --md-sys-color-on-primary: #ffffff;
+  --md-sys-color-surface: #050505;
+  --md-sys-color-on-surface: #e5e7eb;
+  --md-sys-color-surface-variant: #1a1a1a;
+  --md-sys-color-outline: #374151;
+}
+
+/* TEMI CHIARI */
+
+.theme-solarized-light {
+  --md-sys-color-primary: #268bd2;
+  --md-sys-color-on-primary: #ffffff;
+  --md-sys-color-surface: #fdf6e3;
+  --md-sys-color-on-surface: #657b83;
+  --md-sys-color-surface-variant: #eee8d5;
+  --md-sys-color-outline: #93a1a1;
+}
+
+.theme-github-light {
+  --md-sys-color-primary: #0969da;
+  --md-sys-color-on-primary: #ffffff;
+  --md-sys-color-surface: #ffffff;
+  --md-sys-color-on-surface: #24292f;
+  --md-sys-color-surface-variant: #f6f8fa;
+  --md-sys-color-outline: #d0d7de;
 }
 
 body {
-  @apply bg-surface text-on-surface antialiased;
+  @apply bg-surface text-on-surface antialiased transition-colors duration-300;
   font-family: 'JetBrains Mono', monospace;
   margin: 0;
   overflow: hidden;
+}
+
+/* --- Stili di Stampa (Fix PDF Export) --- */
+@media print {
+  aside, header, footer, .cm-editor, button, .resizer {
+    display: none !important;
+  }
+
+  main {
+    display: block !important;
+    position: absolute !important;
+    top: 0 !important;
+    left: 0 !important;
+    width: 100% !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    overflow: visible !important;
+  }
+
+  .markdown-content {
+    display: block !important;
+    width: 100% !important;
+    color: black !important;
+    padding: 2cm !important;
+  }
 }
