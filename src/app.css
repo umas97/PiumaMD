@@ -1,0 +1,45 @@
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,100..800;1,100..800&display=swap');
+@import "tailwindcss";
+
+@theme {
+  /* Mapping delle variabili CSS native ai nomi di Tailwind */
+  --color-primary: var(--md-sys-color-primary);
+  --color-on-primary: var(--md-sys-color-on-primary);
+  --color-surface: var(--md-sys-color-surface);
+  --color-on-surface: var(--md-sys-color-on-surface);
+  --color-outline: var(--md-sys-color-outline);
+  --color-surface-variant: var(--md-sys-color-surface-variant);
+  
+  /* Arrotondamenti in stile Material Design */
+  --radius-md: 12px;
+  --radius-lg: 24px;
+}
+
+:root {
+  /* Palette Default: Material Blue (Light Mode) */
+  --md-sys-color-primary: var(--user-accent-color, #3f51b5);
+  --md-sys-color-on-primary: #ffffff;
+  --md-sys-color-surface: #fdfbff;
+  --md-sys-color-on-surface: #1b1b1f;
+  --md-sys-color-surface-variant: #e1e2ec;
+  --md-sys-color-outline: #777680;
+}
+
+/* Dark Mode */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --md-sys-color-primary: #bac3ff;
+    --md-sys-color-on-primary: #001971;
+    --md-sys-color-surface: #1b1b1f;
+    --md-sys-color-on-surface: #e4e2e6;
+    --md-sys-color-surface-variant: #45464f;
+    --md-sys-color-outline: #91909a;
+  }
+}
+
+body {
+  @apply bg-surface text-on-surface antialiased;
+  font-family: 'JetBrains Mono', monospace;
+  margin: 0;
+  overflow: hidden;
+}
