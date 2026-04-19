@@ -11,6 +11,11 @@ mkdir -p "$BIN_DIR"
 OS=$(uname -s | tr '[:upper:]' '[:lower:]')
 ARCH=$(uname -m)
 
+# Normalizzazione OS per Windows (GHA usa MINGW o MSYS)
+if [[ "$OS" == mingw* ]] || [[ "$OS" == msys* ]] || [[ "$OS" == cygwin* ]]; then
+  OS="windows"
+fi
+
 echo "🚀 Avvio setup Pandoc v$PANDOC_VERSION per $OS ($ARCH)..."
 
 case "$OS" in
@@ -25,12 +30,16 @@ case "$OS" in
     ;;
   darwin)
     if [ "$ARCH" = "x86_64" ]; then
-      URL="https://github.com/jgm/pandoc/releases/download/$PANDOC_VERSION/pandoc-$PANDOC_VERSION-macOS.zip"
+      URL="https://github.com/jgm/pandoc/releases/download/$PANDOC_VERSION/pandoc-$PANDOC_VERSION-x86_64-macOS.zip"
       TARGET_NAME="pandoc-x86_64-apple-darwin"
     elif [ "$ARCH" = "arm64" ]; then
-      URL="https://github.com/jgm/pandoc/releases/download/$PANDOC_VERSION/pandoc-$PANDOC_VERSION-macOS.zip"
+      URL="https://github.com/jgm/pandoc/releases/download/$PANDOC_VERSION/pandoc-$PANDOC_VERSION-arm64-macOS.zip"
       TARGET_NAME="pandoc-aarch64-apple-darwin"
     fi
+    ;;
+  windows)
+    URL="https://github.com/jgm/pandoc/releases/download/$PANDOC_VERSION/pandoc-$PANDOC_VERSION-windows-x86_64.zip"
+    TARGET_NAME="pandoc-x86_64-pc-windows-msvc.exe"
     ;;
   *)
     echo "❌ Sistema operativo non supportato automaticamente: $OS"
@@ -57,7 +66,15 @@ if [[ "$URL" == *.tar.gz ]]; then
 elif [[ "$URL" == *.zip ]]; then
     unzip -q "$TEMP_FILE"
     EXTRACTED_DIR=$(find . -maxdepth 1 -name "pandoc-$PANDOC_VERSION*" -type d)
-    mv "$EXTRACTED_DIR/bin/pandoc" "$BIN_DIR/$TARGET_NAME"
+    # Su Windows l'eseguibile potrebbe essere direttamente nella cartella o in bin/
+    if [ -f "$EXTRACTED_DIR/bin/pandoc.exe" ]; then
+        mv "$EXTRACTED_DIR/bin/pandoc.exe" "$BIN_DIR/$TARGET_NAME"
+    elif [ -f "$EXTRACTED_DIR/pandoc.exe" ]; then
+        mv "$EXTRACTED_DIR/pandoc.exe" "$BIN_DIR/$TARGET_NAME"
+    else
+        # Caso macOS .zip
+        mv "$EXTRACTED_DIR/bin/pandoc" "$BIN_DIR/$TARGET_NAME"
+    fi
     rm -rf "$EXTRACTED_DIR"
 fi
 
