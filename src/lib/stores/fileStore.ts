@@ -74,12 +74,22 @@ if (typeof window !== 'undefined') {
 	if (savedOpened && isTauri()) {
 		try {
 			const paths: string[] = JSON.parse(savedOpened);
-			// Carichiamo i file in sequenza
-			paths.forEach(path => {
-				if (!path.startsWith(UNSAVED_PREFIX)) {
-					openFile(path);
-				}
-			});
+			
+			// PRIORITÀ: Carichiamo prima il file attivo per velocizzare la visualizzazione del contenuto
+			if (savedActive && paths.includes(savedActive)) {
+				openFile(savedActive).then(() => {
+					// Poi carichiamo gli altri in background
+					paths.filter(p => p !== savedActive).forEach(path => {
+						if (!path.startsWith(UNSAVED_PREFIX)) openFile(path);
+					});
+				});
+			} else {
+				// Fallback: caricamento normale se non c'è un attivo o non è in lista
+				paths.forEach(path => {
+					if (!path.startsWith(UNSAVED_PREFIX)) openFile(path);
+				});
+			}
+			
 			if (savedActive) activeFile.set(savedActive);
 		} catch (e) {}
 	}
