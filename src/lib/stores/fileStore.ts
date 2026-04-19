@@ -41,21 +41,64 @@ export const recentFiles = writable<string[]>([]);
 // NUOVO: Stato Autosave (disattivato di default)
 export const autosaveEnabled = writable<boolean>(false);
 
+// NUOVO: Segnale per saltare a una riga specifica (per Search/Links)
+export const jumpSignal = writable<{ path: string, line: number } | null>(null);
+
 // Carica preferenze all'avvio
 if (typeof window !== 'undefined') {
 	const savedRecent = localStorage.getItem('recentFiles');
 	if (savedRecent) {
 		try { recentFiles.set(JSON.parse(savedRecent)); } catch (e) {}
 	}
-	// Nota: autosaveEnabled non viene caricato per scelta dell'utente (sempre OFF all'avvio)
+
+	// Ripristino Workspace (Cartella e File aperti)
+	const savedDir = localStorage.getItem('currentDir');
+	if (savedDir && isTauri()) {
+		// Funzione helper per caricare la directory all'avvio senza dialog
+		invoke<FileEntry[]>('get_file_tree', { rootPath: savedDir })
+			.then(tree => {
+				currentDir.set(savedDir);
+				fileTree.set(tree);
+			})
+			.catch(console.error);
+	}
+
+	const savedOpened = localStorage.getItem('openedFilesPaths');
+	const savedActive = localStorage.getItem('activeFile');
+	if (savedOpened && isTauri()) {
+		try {
+			const paths: string[] = JSON.parse(savedOpened);
+			// Carichiamo i file in sequenza
+			paths.forEach(path => {
+				if (!path.startsWith(UNSAVED_PREFIX)) {
+					openFile(path);
+				}
+			});
+			if (savedActive) activeFile.set(savedActive);
+		} catch (e) {}
+	}
 }
 
-// Persistenza preferenze
-autosaveEnabled.subscribe(value => {
-	if (typeof window !== 'undefined') {
+// Persistenza preferenze e Workspace
+if (typeof window !== 'undefined') {
+	autosaveEnabled.subscribe(value => {
 		localStorage.setItem('autosaveEnabled', String(value));
-	}
-});
+	});
+
+	currentDir.subscribe(value => {
+		if (value) localStorage.setItem('currentDir', value);
+		else localStorage.removeItem('currentDir');
+	});
+
+	openedFiles.subscribe(files => {
+		const paths = files.filter(f => !f.path.startsWith(UNSAVED_PREFIX)).map(f => f.path);
+		localStorage.setItem('openedFilesPaths', JSON.stringify(paths));
+	});
+
+	activeFile.subscribe(value => {
+		if (value) localStorage.setItem('activeFile', value);
+	});
+}
 
 function addRecentFile(path: string) {
 	if (path.startsWith(UNSAVED_PREFIX)) return;
@@ -186,4 +229,32 @@ export async function openFile(path?: string) {
 export function closeFile(path: string) {
 	openedFiles.update(files => files.filter(f => f.path !== path));
 	activeFile.update(current => current === path ? null : current);
+}
+
+/**
+ * Cerca un file per nome ricorsivamente nell'albero e lo apre (Supporto Zettelkasten)
+ */
+export function openFileByName(name: string) {
+	const tree = get(fileTree);
+	const targetName = name.toLowerCase().replace(/\.md$/, '');
+	
+	function findInTree(items: FileEntry[]): string | null {
+		for (const item of items) {
+			if (!item.is_dir && item.name.toLowerCase().replace(/\.md$/, '') === targetName) {
+				return item.path;
+			}
+			if (item.is_dir && item.children) {
+				const found = findInTree(item.children);
+				if (found) return found;
+			}
+		}
+		return null;
+	}
+
+	const path = findInTree(tree);
+	if (path) {
+		openFile(path);
+	} else {
+		console.warn(`File non trovato per Wikilink: ${name}`);
+	}
 }

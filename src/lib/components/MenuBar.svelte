@@ -11,12 +11,16 @@
   import { generateTOC } from "$lib/utils/markdownTools";
   import { save, open } from "@tauri-apps/plugin-dialog";
   import { writeTextFile } from "@tauri-apps/plugin-fs";
+  import { invoke } from "@tauri-apps/api/core";
   import { get } from "svelte/store";
   import ThemeModal from "./ThemeModal.svelte";
+  import FeaturesModal from "./FeaturesModal.svelte";
   import { openUrl } from "@tauri-apps/plugin-opener";
+  import { isSearchModalOpen } from "$lib/stores/uiStore";
 
   let activeMenu = $state<string | null>(null);
   let showThemeModal = $state(false);
+  let showFeaturesModal = $state(false);
 
   const activeFileData = $derived(
     $openedFiles.find((f) => f.path === $activeFile),
@@ -109,6 +113,21 @@
       console.error("Errore inserimento immagine:", e);
     }
   }
+
+  async function openNewWindow() {
+    if (!activeFileData) return;
+    closeMenus();
+    try {
+      await invoke("open_detached_window", { path: activeFileData.path });
+    } catch (e) {
+      console.error("Errore apertura finestra:", e);
+    }
+  }
+
+  function triggerSearch() {
+    closeMenus();
+    isSearchModalOpen.set(true);
+  }
 </script>
 
 <svelte:window onclick={closeMenus} />
@@ -158,6 +177,14 @@
             class="w-full text-left px-3 py-1.5 hover:bg-primary/10 rounded flex items-center gap-3 text-[11px]"
           >
             <span class="opacity-70">📁</span> Apri Cartella
+          </button>
+          <button
+            onclick={openNewWindow}
+            class="w-full text-left px-3 py-1.5 hover:bg-primary/10 rounded flex items-center gap-3 text-[11px] {!activeFileData
+              ? 'opacity-30 pointer-events-none'
+              : ''}"
+          >
+            <span class="opacity-70">🪟</span> Apri in Nuova Finestra
           </button>
           <div class="h-[1px] bg-outline/5 my-1"></div>
           <button
@@ -228,6 +255,12 @@
           </button>
           <div class="h-[1px] bg-outline/5 my-1"></div>
           <button
+            onclick={triggerSearch}
+            class="w-full text-left px-3 py-1.5 hover:bg-primary/10 rounded flex items-center gap-3 text-[11px]"
+          >
+            <span class="opacity-70">🔍</span> Cerca nel Progetto...
+          </button>
+          <button
             onclick={() => {
               closeMenus();
               showThemeModal = true;
@@ -235,6 +268,15 @@
             class="w-full text-left px-3 py-1.5 hover:bg-primary/10 rounded flex items-center gap-3 text-[11px]"
           >
             <span class="opacity-70">🎨</span> Personalizza Tema...
+          </button>
+          <button
+            onclick={() => {
+              closeMenus();
+              showFeaturesModal = true;
+            }}
+            class="w-full text-left px-3 py-1.5 hover:bg-primary/10 rounded flex items-center gap-3 text-[11px]"
+          >
+            <span class="opacity-70">🚀</span> Gestione Funzionalità...
           </button>
         </div>
       {/if}
@@ -331,6 +373,10 @@
 
 {#if showThemeModal}
   <ThemeModal onclose={() => (showThemeModal = false)} />
+{/if}
+
+{#if showFeaturesModal}
+  <FeaturesModal onclose={() => (showFeaturesModal = false)} />
 {/if}
 
 <style>

@@ -7,6 +7,7 @@
 	import hljs from 'highlight.js';
 	import mermaid from 'mermaid';
 	import { convertFileSrc } from '@tauri-apps/api/core';
+	import { openFileByName } from '$lib/stores/fileStore';
 	import 'highlight.js/styles/tokyo-night-dark.css';
 	import 'katex/dist/katex.min.css';
 
@@ -52,6 +53,22 @@
 	md.use(footnote);
 	md.use(katex);
 
+	// --- CUSTOM RULE PER WIKILINKS [[Nome File]] ---
+	md.inline.ruler.after('link', 'wikilink', (state, silent) => {
+		const wikilinkRegex = /^\[\[(.+?)\]\]/;
+		const match = wikilinkRegex.exec(state.src.slice(state.pos));
+		if (!match) return false;
+		if (!silent) {
+			const token = state.push('link_open', 'a', 1);
+			token.attrs = [['href', 'wikilink:' + encodeURIComponent(match[1])], ['class', 'wikilink text-primary font-bold']];
+			const text = state.push('text', '', 0);
+			text.content = match[1];
+			state.push('link_close', 'a', -1);
+		}
+		state.pos += match[0].length;
+		return true;
+	});
+
 	// --- CUSTOM RULE PER IMMAGINI (Tauri Asset Protocol) ---
 	const defaultImageRule = md.renderer.rules.image || function (tokens, idx, options, env, self) {
 		return self.renderToken(tokens, idx, options);
@@ -62,18 +79,58 @@
 		const srcIndex = token.attrIndex('src');
 		if (srcIndex !== -1 && token.attrs) {
 			let url = token.attrs[srcIndex][1];
-			
-			// Decodifichiamo l'URL (es. %20 -> spazio) per permettere a Tauri di trovare il file su disco
 			const decodedUrl = decodeURIComponent(url);
-			
-			// Se siamo in Tauri e il percorso sembra locale, lo convertiamo
 			if (isTauri() && (decodedUrl.startsWith('/') || decodedUrl.match(/^[a-zA-Z]:/))) {
 				token.attrs[srcIndex][1] = convertFileSrc(decodedUrl);
-				console.log("Percorso convertito per Tauri:", decodedUrl, "->", token.attrs[srcIndex][1]);
 			}
 		}
 		return defaultImageRule(tokens, idx, options, env, self);
 	};
+
+	// --- CUSTOM RULE PER GLI ID DEI TITOLI (Per l'indice/TOC) ---
+	const defaultHeaderOpen = md.renderer.rules.heading_open || function(tokens: any, idx: number, options: any, env: any, self: any) {
+		return self.renderToken(tokens, idx, options);
+	};
+
+	md.renderer.rules.heading_open = (tokens, idx, options, env, self) => {
+		const token = tokens[idx];
+		const nextToken = tokens[idx + 1];
+		if (nextToken && nextToken.type === 'inline') {
+			const titleText = nextToken.content;
+			const id = titleText.toLowerCase()
+				.replace(/\s+/g, '-')
+				.replace(/[^\w-]/g, '');
+			token.attrSet('id', id);
+		}
+		return defaultHeaderOpen(tokens, idx, options, env, self);
+	};
+
+	// Gestione Scrolling Fluido
+	function handlePreviewClick(e: MouseEvent) {
+		const target = e.target as HTMLElement;
+		const anchor = target.closest('a');
+		if (!anchor) return;
+
+		const href = anchor.getAttribute('href') || '';
+
+		// Caso 1: Wikilink [[Nome File]]
+		if (href.startsWith('wikilink:')) {
+			e.preventDefault();
+			const fileName = decodeURIComponent(href.slice(9));
+			openFileByName(fileName);
+			return;
+		}
+
+		// Caso 2: Anchor interna #titolo
+		if (anchor.hash && anchor.hash.startsWith('#')) {
+			const targetId = anchor.hash.slice(1);
+			const targetEl = document.getElementById(targetId);
+			if (targetEl) {
+				e.preventDefault();
+				targetEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+			}
+		}
+	}
 
 	// Rendering reattivo Svelte 5
 	let renderedContent = $derived.by(() => {
@@ -85,11 +142,9 @@
 		}
 	});
 
-	// Effetto per il rendering di Mermaid dopo ogni aggiornamento del DOM
+	// Effetto per il rendering di Mermaid
 	$effect(() => {
-		// Dipendenza esplicita dal contenuto renderizzato
 		const _current = renderedContent;
-		
 		if (typeof window !== 'undefined') {
 			const nodes = document.querySelectorAll('.mermaid');
 			if (nodes.length > 0) {
@@ -102,7 +157,9 @@
 </script>
 
 <div class="h-full overflow-y-auto p-8 md:p-16 bg-surface text-on-surface custom-scrollbar">
-	<article class="markdown-content max-w-4xl mx-auto">
+	<!-- svelte-ignore a11y_click_events_have_key_events -->
+	<!-- svelte-ignore a11y_no_static_element_interactions -->
+	<article class="markdown-content max-w-4xl mx-auto" onclick={handlePreviewClick}>
 		{@html renderedContent}
 	</article>
 
