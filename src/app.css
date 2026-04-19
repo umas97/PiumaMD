@@ -92,25 +92,80 @@ body {
 
 /* --- Stili di Stampa (Fix PDF Export) --- */
 @media print {
-  aside, header, footer, .cm-editor, button, .resizer {
+  /* 1. RESET GLOBALE E SFONDO BIANCO */
+  /* Colpiamo anche i div contenitori di SvelteKit per rimuovere sfondi scuri e scrollbar */
+  html, body, #app, [class*="h-screen"], [class*="w-screen"], main, div {
+    background: white !important;
+    background-color: white !important;
+    color: black !important;
+    overflow: visible !important;
+    height: auto !important;
+    width: auto !important;
+    position: static !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    box-shadow: none !important;
+    border: none !important;
+    transition: none !important;
+    animation: none !important;
+  }
+
+  /* 2. SUPER PULIZIA UI */
+  /* Nascondiamo tutto ciò che non è il contenuto della preview */
+  aside, 
+  header, 
+  nav, 
+  footer, 
+  button, 
+  [role="tablist"], 
+  .status-bar, 
+  .tab-bar, 
+  .MenuBar,
+  .cm-editor,
+  .resizer,
+  .floating-button,
+  [class*="absolute"], 
+  [class*="fixed"] {
     display: none !important;
   }
 
-  main {
-    display: block !important;
-    position: absolute !important;
-    top: 0 !important;
-    left: 0 !important;
-    width: 100% !important;
-    padding: 0 !important;
-    margin: 0 !important;
-    overflow: visible !important;
-  }
-
+  /* 3. FOCUS SULLA PREVIEW */
   .markdown-content {
     display: block !important;
     width: 100% !important;
-    color: black !important;
     padding: 2cm !important;
+    margin: 0 auto !important;
+    background: white !important;
+    color: black !important;
+    visibility: visible !important;
+  }
+
+  /* 4. OTTIMIZZAZIONE TIPOGRAFICA */
+  .markdown-content * {
+    color: black !important;
+    background: transparent !important;
+  }
+
+  .markdown-content pre, 
+  .markdown-content blockquote, 
+  .markdown-content img, 
+  .markdown-content table {
+    break-inside: avoid !important;
+    page-break-inside: avoid !important;
+  }
+
+  .markdown-content h1, 
+  .markdown-content h2, 
+  .markdown-content h3 {
+    break-after: avoid !important;
+    page-break-after: avoid !important;
+    color: black !important;
+  }
+
+  /* Assicura che le immagini non escano dai bordi */
+  img {
+    max-width: 100% !important;
+    height: auto !important;
+    border: 0 !important;
   }
 }

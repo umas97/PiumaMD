@@ -25,6 +25,8 @@ export interface OpenedFile {
 	name: string;
 	content: string;
 	isModified: boolean;
+	isEditing: boolean;
+	column: 'left' | 'right';
 	isNew?: boolean;
 }
 
@@ -35,7 +37,11 @@ let newFileCounter = 1;
 export const currentDir = writable<string | null>(null);
 export const fileTree = writable<FileEntry[]>([]);
 export const openedFiles = writable<OpenedFile[]>([]);
-export const activeFile = writable<string | null>(null);
+export const activeFile = writable<string | null>(null); // Global last active
+export const activeFileLeft = writable<string | null>(null);
+export const activeFileRight = writable<string | null>(null);
+export const focusedColumn = writable<'left' | 'right'>('left');
+export const columnMode = writable<'single' | 'split'>('single');
 export const recentFiles = writable<string[]>([]);
 
 // NUOVO: Stato Autosave (disattivato di default)
@@ -109,6 +115,68 @@ function addRecentFile(path: string) {
 	});
 }
 
+/**
+ * Imposta il file attivo per una specifica colonna
+ */
+export function setActiveInColumn(path: string | null, column: 'left' | 'right') {
+	if (column === 'left') activeFileLeft.set(path);
+	else activeFileRight.set(path);
+	
+	if (path) {
+		activeFile.set(path);
+		focusedColumn.set(column);
+	}
+}
+
+/**
+ * Sposta un file da una colonna all'altra
+ */
+export function moveFileToColumn(path: string, targetColumn: 'left' | 'right') {
+	openedFiles.update(files => 
+		files.map(f => f.path === path ? { ...f, column: targetColumn } : f)
+	);
+	
+	// Se stiamo spostando il file attivo, aggiorniamo gli store di colonna
+	const currentLeft = get(activeFileLeft);
+	const currentRight = get(activeFileRight);
+	
+	if (path === currentLeft && targetColumn === 'right') {
+		activeFileLeft.set(null);
+		activeFileRight.set(path);
+	} else if (path === currentRight && targetColumn === 'left') {
+		activeFileRight.set(null);
+		activeFileLeft.set(path);
+	}
+	
+	focusedColumn.set(targetColumn);
+	activeFile.set(path);
+}
+
+/**
+ * Imposta la modalità di visualizzazione (Singola o Split)
+ * Gestisce la migrazione delle schede quando si chiude la split view
+ */
+export function setColumnMode(mode: 'single' | 'split') {
+	columnMode.update(current => {
+		if (mode === 'single' && current === 'split') {
+			// Spostiamo tutti i file nella colonna di sinistra
+			openedFiles.update(files => files.map(f => ({ ...f, column: 'left' })));
+			
+			// Gestiamo i file attivi
+			const rightActive = get(activeFileRight);
+			if (rightActive) {
+				// Se c'era un file attivo a destra, lo rendiamo l'ultimo attivo a sinistra
+				activeFileLeft.set(rightActive);
+				activeFile.set(rightActive);
+			}
+			
+			activeFileRight.set(null);
+			focusedColumn.set('left');
+		}
+		return mode;
+	});
+}
+
 export function createNewFile() {
 	const id = newFileCounter++;
 	const path = `${UNSAVED_PREFIX}${id}`;
@@ -116,9 +184,9 @@ export function createNewFile() {
 	
 	openedFiles.update(files => [
 		...files, 
-		{ path, name, content: '', isModified: false, isNew: true }
+		{ path, name, content: '', isModified: false, isEditing: true, column: get(focusedColumn), isNew: true }
 	]);
-	activeFile.set(path);
+	setActiveInColumn(path, get(focusedColumn));
 }
 
 let saveTimeout: ReturnType<typeof setTimeout>;
@@ -144,7 +212,7 @@ export async function saveFile(path: string, content: string) {
 			targetPath = selectedPath;
 			
 			// Usiamo il comando Rust per scrivere il file (più robusto)
-			await invoke('save_markdown_file', { path: targetPath, content });
+			await invoke('save_text_file', { path: targetPath, content });
 			
 			openedFiles.update(files => files.map(f => 
 				f.path === path ? { 
@@ -160,7 +228,7 @@ export async function saveFile(path: string, content: string) {
 			addRecentFile(targetPath);
 			console.log(`[SaveFile] Nuovo file creato: ${targetPath}`);
 		} else {
-			await invoke('save_markdown_file', { path: targetPath, content });
+			await invoke('save_text_file', { path: targetPath, content });
 			openedFiles.update(files => 
 				files.map(f => f.path === targetPath ? { ...f, isModified: false } : f)
 			);
@@ -169,6 +237,15 @@ export async function saveFile(path: string, content: string) {
 	} catch (e) {
 		console.error("[SaveFile] Errore:", e);
 	}
+}
+
+/**
+ * Attiva/Disattiva la modalità editing per un file specifico
+ */
+export function toggleEditMode(path: string) {
+	openedFiles.update(files => 
+		files.map(f => f.path === path ? { ...f, isEditing: !f.isEditing } : f)
+	);
 }
 
 export function updateFileContent(path: string, newContent: string) {
@@ -212,15 +289,14 @@ export async function openFile(path?: string) {
 		if (filePath) {
 			const content = await invoke<string>('read_markdown_file', { path: filePath });
 			const name = filePath.split(/[/\\]/).pop() || filePath;
-			
 			openedFiles.update(files => {
 				const existing = files.find(f => f.path === filePath);
 				if (!existing) {
-					return [...files, { path: filePath!, name, content, isModified: false }];
+					return [...files, { path: filePath!, name, content, isModified: false, isEditing: false, column: get(focusedColumn) }];
 				}
 				return files;
 			});
-			activeFile.set(filePath);
+			setActiveInColumn(filePath, get(focusedColumn));
 			addRecentFile(filePath);
 		}
 	} catch (e) { console.error(e); }
@@ -228,6 +304,10 @@ export async function openFile(path?: string) {
 
 export function closeFile(path: string) {
 	openedFiles.update(files => files.filter(f => f.path !== path));
+	
+	if (get(activeFileLeft) === path) activeFileLeft.set(null);
+	if (get(activeFileRight) === path) activeFileRight.set(null);
+	
 	activeFile.update(current => current === path ? null : current);
 }
 

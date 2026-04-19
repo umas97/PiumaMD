@@ -9,15 +9,7 @@
     "dialog:allow-open",
     "dialog:allow-save",
     {
-      "identifier": "fs:allow-read",
-      "scope": ["**/*", "/"]
-    },
-    {
-      "identifier": "fs:allow-write",
-      "scope": ["**/*", "/"]
-    },
-    {
-      "identifier": "fs:allow-exists",
+      "identifier": "fs:default",
       "scope": ["**/*", "/"]
     }
   ]

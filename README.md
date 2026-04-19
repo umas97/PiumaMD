@@ -75,6 +75,15 @@ Per generare l'eseguibile per il tuo sistema operativo:
 npm run tauri build
 ```
 
+### 🚀 Esportazione Avanzata (Pandoc)
+PiumaMD utilizza **Pandoc** come motore per l'esportazione in formati complessi (Word, eBook, LaTeX).
+- **Bootstrap Automatico**: All'esecuzione di `npm install`, il progetto scaricherà automaticamente il binario Pandoc corretto come sidecar di Tauri.
+- **Setup Manuale**: Se il binario dovesse mancare o se preferisci scaricarlo separatamente, puoi eseguire:
+  ```bash
+  npm run setup:pandoc
+  ```
+- **Nota**: L'esportazione in PDF via Pandoc richiede la presenza di un motore LaTeX (es. TeX Live, MiKTeX o TinyTeX) installato sul sistema.
+
 ---
 
 ## ⌨️ Scorciatoie da tastiera

@@ -5,9 +5,11 @@
 	import StatusBar from "$lib/components/StatusBar.svelte";
 	import MenuBar from "$lib/components/MenuBar.svelte";
 	import SearchModal from "$lib/components/SearchModal.svelte";
-	import { activeFile, openedFiles, saveFile, openFile } from "$lib/stores/fileStore";
+	import SaveConfirmModal from "$lib/components/SaveConfirmModal.svelte";
+	import HelpModal from "$lib/components/HelpModal.svelte";
+	import { activeFile, openedFiles, saveFile, openFile, closeFile, createNewFile } from "$lib/stores/fileStore";
 	import { features } from "$lib/stores/settingsStore";
-	import { isSearchModalOpen } from "$lib/stores/uiStore";
+	import { isSearchModalOpen, openHelp, requestCloseConfirmation, closeHelp } from "$lib/stores/uiStore";
 	import { onMount } from "svelte";
 	import { get } from "svelte/store";
 
@@ -71,6 +73,35 @@
 			event.preventDefault();
 			isSearchModalOpen.set(true);
 		}
+
+		// Guida con F1
+		if (event.key === 'F1') {
+			event.preventDefault();
+			openHelp();
+		}
+
+		// Nuovo File con Ctrl+N
+		if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'n') {
+			event.preventDefault();
+			createNewFile();
+		}
+
+		// Chiudi Scheda con Ctrl+W
+		if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'w') {
+			event.preventDefault();
+			const path = get(activeFile);
+			if (path) {
+				const files = get(openedFiles);
+				const file = files.find(f => f.path === path);
+				if (file) {
+					if (file.isModified) {
+						requestCloseConfirmation(file.path, file.name);
+					} else {
+						closeFile(file.path);
+					}
+				}
+			}
+		}
 	}
 </script>
 
@@ -79,6 +110,9 @@
 	onmouseup={stopResizing} 
 	onkeydown={handleKeyDown}
 />
+
+<SaveConfirmModal />
+<HelpModal />
 
 {#if $isSearchModalOpen}
 	<SearchModal onclose={() => isSearchModalOpen.set(false)} />
@@ -113,9 +147,6 @@
 
 		<!-- Main Workspace -->
 		<main class="flex-1 flex flex-col min-w-0 bg-surface transition-all duration-500 overflow-hidden">
-			{#if !$features.focusMode}
-				<TabManager />
-			{/if}
 			
 			<div class="flex-1 overflow-hidden relative">
 				{@render children()}

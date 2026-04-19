@@ -15,7 +15,7 @@ Questa lista raccoglie idee e suggerimenti per le future versioni di PiumaMD, su
 - [x] **Vim Mode**: Keybindings classici di Vim per power users.
 
 ## 📤 Esportazione & Integrazione
-- [ ] **Esportazione Avanzata**: Aggiunta di formati come `.docx`, `.epub` o `.latex` tramite l'integrazione con **Pandoc**.
+- [x] **Esportazione Avanzata**: Integrazione con **Pandoc** (Sidecar) per .docx, .epub, .latex e PDF migliorato senza tagli.
 - [ ] **Cloud Sync**: Sincronizzazione automatica con Google Drive, Dropbox o WebDAV.
 - [ ] **Pubblicazione Diretta**: Integrazione per pubblicare su Medium, Dev.to o Ghost.
 
