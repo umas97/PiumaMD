@@ -4,7 +4,7 @@
 
 PiumaMD è un editor Markdown moderno e minimale, progettato per offrire un'esperienza di scrittura fluida, veloce e ricca di funzionalità avanzate. Costruito con **Tauri v2** e **Svelte 5**, unisce le prestazioni delle applicazioni native alla flessibilità delle tecnologie web moderne.
 
-![PiumaMD Banner](https://via.placeholder.com/800x450?text=PiumaMD+Professional+Markdown+Editor)
+![PiumaMD Banner](src-tauri/icons/banner.png)
 
 ---
 
@@ -41,7 +41,7 @@ Massimizza la tua produttività con queste shortcut:
 | `Ctrl + F` | Cerca testo all'interno dell'editor |
 | `Ctrl + B` | Applica **grassetto** alla selezione |
 | `Ctrl + I` | Applica *corsivo* alla selezione |
-| `Ctrl + K` | Inserisci un [link](url) |
+| `Ctrl + K` | Inserisci un Link Markdown |
 | `Ctrl + /` | Commenta / De-commenta la riga |
 | `[[` | Attiva l'autocompletamento intelligente dei file (Wiki-links) |
 | `Ctrl + Click` | Segui un link o apri un file collegato (Wikilink) |
