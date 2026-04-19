@@ -32,7 +32,11 @@
 
   // Recupera il file attivo in base alla colonna focalizzata
   const currentFile = $derived(
-    $openedFiles.find((f) => f.path === ($focusedColumn === 'left' ? $activeFileLeft : $activeFileRight))
+    $openedFiles.find(
+      (f) =>
+        f.path ===
+        ($focusedColumn === "left" ? $activeFileLeft : $activeFileRight),
+    ),
   );
 
   // Per compatibilità con i vecchi riferimenti nel template
@@ -66,7 +70,7 @@
 
       if (selectedPath) {
         const renderedHtml = renderMarkdown(activeFileData.content);
-        
+
         const htmlTemplate = `<!DOCTYPE html>
 <html lang="it">
 <head>
@@ -155,7 +159,10 @@
     </footer>
 </body>
 </html>`;
-        await invoke('save_text_file', { path: selectedPath, content: htmlTemplate });
+        await invoke("save_text_file", {
+          path: selectedPath,
+          content: htmlTemplate,
+        });
         alert("Esportazione HTML completata con successo!");
       }
     } catch (e) {
@@ -356,20 +363,36 @@
           >
             <span class="opacity-70">🔍</span> Cerca nel Progetto...
           </button>
-          
+
           <div class="h-[1px] bg-outline/5 my-1"></div>
-          <div class="px-3 py-1 text-[9px] uppercase tracking-tighter opacity-40 font-bold">Layout</div>
-          
+          <div
+            class="px-3 py-1 text-[9px] uppercase tracking-tighter opacity-40 font-bold"
+          >
+            Layout
+          </div>
+
           <button
-            onclick={() => { closeMenus(); setColumnMode('single'); }}
-            class="w-full text-left px-3 py-1.5 hover:bg-primary/10 rounded flex items-center gap-3 text-[11px] {$columnMode === 'single' ? 'text-primary font-bold bg-primary/5' : ''}"
+            onclick={() => {
+              closeMenus();
+              setColumnMode("single");
+            }}
+            class="w-full text-left px-3 py-1.5 hover:bg-primary/10 rounded flex items-center gap-3 text-[11px] {$columnMode ===
+            'single'
+              ? 'text-primary font-bold bg-primary/5'
+              : ''}"
           >
             <span class="opacity-70">🔲</span> Colonna Singola
           </button>
-          
+
           <button
-            onclick={() => { closeMenus(); setColumnMode('split'); }}
-            class="w-full text-left px-3 py-1.5 hover:bg-primary/10 rounded flex items-center gap-3 text-[11px] {$columnMode === 'split' ? 'text-primary font-bold bg-primary/5' : ''}"
+            onclick={() => {
+              closeMenus();
+              setColumnMode("split");
+            }}
+            class="w-full text-left px-3 py-1.5 hover:bg-primary/10 rounded flex items-center gap-3 text-[11px] {$columnMode ===
+            'split'
+              ? 'text-primary font-bold bg-primary/5'
+              : ''}"
           >
             <span class="opacity-70">🔳</span> Due Colonne (Split)
           </button>
@@ -420,14 +443,13 @@
             >
               <span>📖</span> Guida a PiumaMD
             </button>
-            
+
             <div class="h-[1px] w-full bg-outline/5 my-2"></div>
 
             <div class="flex flex-col items-center gap-2 text-center pt-2">
               <div class="text-xl">✨</div>
               <div class="font-bold text-sm text-primary">PiumaMD</div>
-              <div class="text-[10px] opacity-60">Versione 1.5.0</div>
-              
+
               <button
                 onclick={() => {
                   closeMenus();
@@ -435,7 +457,20 @@
                 }}
                 class="mt-3 w-full flex items-center justify-center gap-2 px-3 py-1.5 bg-surface-variant/20 hover:bg-primary/10 rounded-full border border-outline/5 transition-all text-[10px] font-bold uppercase tracking-widest text-primary"
               >
-                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3 0 6-2 6-5.5.08-1.25-.27-2.48-1-3.5.28-1.15.28-2.35 0-3.5 0 0-1 0-3 1.5-2.64-.5-5.36-.5-8 0C6 2 5 2 5 2c-.3 1.15-.3 2.35 0 3.5A5.403 5.403 0 0 0 4 9c0 3.5 3 5.5 6 5.5-.39.49-.68 1.05-.85 1.65-.17.6-.22 1.23-.15 1.85v4"></path><path d="M9 18c-4.51 2-5-2-7-2"></path></svg>
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="14"
+                  height="14"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  ><path
+                    d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3 0 6-2 6-5.5.08-1.25-.27-2.48-1-3.5.28-1.15.28-2.35 0-3.5 0 0-1 0-3 1.5-2.64-.5-5.36-.5-8 0C6 2 5 2 5 2c-.3 1.15-.3 2.35 0 3.5A5.403 5.403 0 0 0 4 9c0 3.5 3 5.5 6 5.5-.39.49-.68 1.05-.85 1.65-.17.6-.22 1.23-.15 1.85v4"
+                  ></path><path d="M9 18c-4.51 2-5-2-7-2"></path></svg
+                >
                 GitHub Project
               </button>
 
@@ -446,7 +481,21 @@
                 }}
                 class="mt-2 w-full flex items-center justify-center gap-2 px-3 py-1.5 bg-surface-variant/20 hover:bg-orange-500/10 rounded-full border border-outline/5 transition-all text-[10px] font-bold uppercase tracking-widest text-orange-500"
               >
-                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"></path><path d="M12 9v4"></path><path d="M12 17h.01"></path></svg>
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="14"
+                  height="14"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  ><path
+                    d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"
+                  ></path><path d="M12 9v4"></path><path d="M12 17h.01"
+                  ></path></svg
+                >
                 Report Issue
               </button>
             </div>

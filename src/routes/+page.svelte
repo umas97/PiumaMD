@@ -30,7 +30,11 @@
 	{@const file = getFile(path)}
 	{@const isFocused = $focusedColumn === column}
 	
+	<!-- svelte-ignore a11y_no_static_element_interactions -->
 	<div 
+		role="button"
+		tabindex="-1"
+		aria-label="Seleziona colonna {column}"
 		class="flex-1 flex flex-col h-full overflow-hidden transition-all duration-300 {isFocused ? 'ring-2 ring-primary/20 bg-surface' : 'bg-surface/50 opacity-90 grayscale-[20%]'}"
 		onmousedown={() => setActiveInColumn(path, column)}
 	>

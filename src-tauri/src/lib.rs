@@ -165,8 +165,7 @@ async fn check_pandoc_exists(app: tauri::AppHandle) -> Result<bool, String> {
 }
 
 #[tauri::command]
-async fn install_pandoc(app: tauri::AppHandle) -> Result<(), String> {
-    use tauri_plugin_shell::ShellExt;
+async fn install_pandoc(_app: tauri::AppHandle) -> Result<(), String> {
     use std::process::Command;
 
     // Eseguiamo lo script di setup
@@ -192,9 +191,54 @@ pub fn run() {
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_fs::init())
         .plugin(tauri_plugin_shell::init())
+        .setup(|app| {
+            #[cfg(target_os = "linux")]
+            {
+                use tauri::Manager;
+                use std::fs;
+                use std::env;
+
+                // 1. Forza l'icona interna (caricata in memoria)
+                let icon_bytes = include_bytes!("../icons/icon.png");
+                if let Ok(img) = image::load_from_memory(icon_bytes) {
+                    let rgba = img.to_rgba8();
+                    let (width, height) = rgba.dimensions();
+                    let tauri_image = tauri::image::Image::new(rgba.as_raw(), width, height);
+                    for window in app.webview_windows().values() {
+                        let _ = window.set_icon(tauri_image.clone());
+                    }
+                }
+
+                // 2. Fix Dock Gnome: Creazione Desktop Entry temporanea per dev
+                let home = env::var("HOME").unwrap_or_default();
+                if !home.is_empty() {
+                    let mut desktop_path = std::path::PathBuf::from(home);
+                    desktop_path.push(".local/share/applications/piumamd-dev.desktop");
+
+                    let current_exe = env::current_exe().unwrap_or_default();
+                    let icon_path = env::current_dir().unwrap_or_default().join("src-tauri/icons/icon.png");
+
+                    let desktop_content = format!(
+"[Desktop Entry]
+Type=Application
+Name=PiumaMD (Dev)
+Exec={}
+Icon={}
+Terminal=false
+StartupWMClass=io.github.umas97.piumamd",
+                        current_exe.display(),
+                        icon_path.display()
+                    );
+
+                    let _ = fs::write(desktop_path, desktop_content);
+                }
+            }
+            Ok(())
+        })
         .invoke_handler(tauri::generate_handler![
             get_file_tree, 
             read_markdown_file, 
+            save_text_file,
             search_project,
             open_detached_window,
             export_markdown,

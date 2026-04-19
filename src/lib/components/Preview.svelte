@@ -74,8 +74,11 @@
 
 <div class="h-full overflow-y-auto p-8 md:p-16 bg-surface text-on-surface custom-scrollbar">
 	<!-- svelte-ignore a11y_click_events_have_key_events -->
-	<!-- svelte-ignore a11y_no_static_element_interactions -->
-	<article class="markdown-content max-w-4xl mx-auto" onclick={handlePreviewClick}>
+	<!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
+	<article 
+		class="markdown-content max-w-4xl mx-auto" 
+		onclick={handlePreviewClick}
+	>
 		{@html renderedContent}
 	</article>
 
