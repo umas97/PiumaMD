@@ -38,6 +38,8 @@
       "icons/icon.icns",
       "icons/icon.ico",
       "icons/icon.png"
-    ]
+    ],
+    "shortDescription": "Editor Markdown leggero, minimale e potente.",
+    "longDescription": "PiumaMD è un editor Markdown moderno progettato per la massima produttività. Offre un'interfaccia minimale ma potente con supporto per Mermaid.js (diagrammi), KaTeX (matematica), Wikilinks (Zettelkasten), esportazione avanzata tramite Pandoc e temi personalizzati. Costruito con Tauri v2 per prestazioni native ottimali."
   }
 }

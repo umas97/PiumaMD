@@ -191,6 +191,7 @@ pub fn run() {
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_fs::init())
         .plugin(tauri_plugin_shell::init())
+        .plugin(tauri_plugin_window_state::Builder::default().build())
         .setup(|_app| {
             Ok(())
         })

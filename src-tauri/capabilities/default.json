@@ -8,6 +8,7 @@
     "opener:default",
     "dialog:allow-open",
     "dialog:allow-save",
+    "window-state:default",
     {
       "identifier": "fs:default",
       "scope": ["**/*", "/"]
