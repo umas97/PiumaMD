@@ -95,25 +95,36 @@ if (typeof window !== 'undefined') {
 	}
 }
 
-// Persistenza preferenze e Workspace
+// Persistenza preferenze e Workspace (Debounced per prestazioni)
 if (typeof window !== 'undefined') {
+	let persistenceTimeout: ReturnType<typeof setTimeout>;
+
+	const persistWorkspace = () => {
+		clearTimeout(persistenceTimeout);
+		persistenceTimeout = setTimeout(() => {
+			const files = get(openedFiles);
+			const paths = files.filter(f => !f.path.startsWith(UNSAVED_PREFIX)).map(f => f.path);
+			localStorage.setItem('openedFilesPaths', JSON.stringify(paths));
+			
+			const active = get(activeFile);
+			if (active) localStorage.setItem('activeFile', active);
+			
+			const dir = get(currentDir);
+			if (dir) localStorage.setItem('currentDir', dir);
+			else localStorage.removeItem('currentDir');
+
+			console.log("[Persistence] Workspace salvato correttamente");
+		}, 1000); // Salva 1 secondo dopo l'ultima modifica
+	};
+
 	autosaveEnabled.subscribe(value => {
 		localStorage.setItem('autosaveEnabled', String(value));
 	});
 
-	currentDir.subscribe(value => {
-		if (value) localStorage.setItem('currentDir', value);
-		else localStorage.removeItem('currentDir');
-	});
-
-	openedFiles.subscribe(files => {
-		const paths = files.filter(f => !f.path.startsWith(UNSAVED_PREFIX)).map(f => f.path);
-		localStorage.setItem('openedFilesPaths', JSON.stringify(paths));
-	});
-
-	activeFile.subscribe(value => {
-		if (value) localStorage.setItem('activeFile', value);
-	});
+	// Sottoscrizioni singole che innescano il salvataggio debouncato
+	currentDir.subscribe(() => persistWorkspace());
+	openedFiles.subscribe(() => persistWorkspace());
+	activeFile.subscribe(() => persistWorkspace());
 }
 
 function addRecentFile(path: string) {

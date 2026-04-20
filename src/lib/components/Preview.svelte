@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { untrack } from 'svelte';
 	import { renderMarkdown } from '$lib/utils/markdownRenderer';
 	import { openFileByName } from '$lib/stores/fileStore';
 	import mermaid from 'mermaid';
@@ -48,27 +49,52 @@
 		}
 	}
 
-	// Rendering reattivo Svelte 5 tramite utility centralizzata
+	// Gestione Reattività Debouncata per Prestazioni
+	let debouncedContent = $state(untrack(() => content));
+	let renderTimeout: ReturnType<typeof setTimeout>;
+
+	$effect(() => {
+		// Accediamo a content per assicurarci che l'effetto sia reattivo ad esso
+		const currentContent = content;
+		
+		clearTimeout(renderTimeout);
+		renderTimeout = setTimeout(() => {
+			debouncedContent = currentContent;
+		}, 300);
+		
+		return () => clearTimeout(renderTimeout);
+	});
+
+	// Rendering reattivo Svelte 5 tramite utility centralizzata (usando il contenuto debouncato)
 	let renderedContent = $derived.by(() => {
 		try {
-			return renderMarkdown(content);
+			return renderMarkdown(debouncedContent);
 		} catch (e) {
 			console.error("Markdown render error:", e);
-			return `<div class="p-4 text-red-500 font-mono text-xs">Errore rendering: ${e}</div><pre>${content}</pre>`;
+			return `<div class="p-4 text-red-500 font-mono text-xs">Errore rendering: ${e}</div><pre>${debouncedContent}</pre>`;
 		}
 	});
 
-	// Effetto per il rendering di Mermaid
+	// Effetto per il rendering di Mermaid (con debounce aggiuntivo)
+	let mermaidTimeout: ReturnType<typeof setTimeout>;
 	$effect(() => {
 		const _current = renderedContent;
 		if (typeof window !== 'undefined') {
+			clearTimeout(mermaidTimeout);
+			
+			// Se non ci sono nodi mermaid, usciamo subito
 			const nodes = document.querySelectorAll('.mermaid');
-			if (nodes.length > 0) {
+			if (nodes.length === 0) return;
+
+			// Eseguiamo mermaid solo dopo che l'utente ha smesso di scrivere da un po' (500ms)
+			mermaidTimeout = setTimeout(() => {
 				mermaid.run({ 
 					nodes: Array.from(nodes) as HTMLElement[] 
 				}).catch(e => console.error("Mermaid run error:", e));
-			}
+			}, 500);
 		}
+		
+		return () => clearTimeout(mermaidTimeout);
 	});
 </script>
 

@@ -10,3 +10,8 @@ node_modules
 !.env.example
 vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
+
+# Roadmap and Backups
+future_improvements.md
+/src-tauri/icons_backup/
+static/favicon_backup.png

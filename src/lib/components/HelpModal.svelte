@@ -3,8 +3,19 @@
     import { renderMarkdown } from '$lib/utils/markdownRenderer';
     import { fade, scale } from 'svelte/transition';
     import guideContent from '$lib/assets/user_guide.md?raw';
+    import { onMount } from 'svelte';
+    import { getVersion } from '@tauri-apps/api/app';
 
     let renderedContent = $derived(renderMarkdown(guideContent));
+    let version = $state('...');
+
+    onMount(async () => {
+        try {
+            version = await getVersion();
+        } catch (e) {
+            version = '1.1.1'; // Fallback
+        }
+    });
 </script>
 
 {#if $isHelpModalOpen}
@@ -42,7 +53,7 @@
 
                 <div class="mt-16 pt-8 border-t border-outline/10 flex flex-col items-center gap-4 text-center">
                     <div class="flex gap-4">
-                        <span class="px-3 py-1 rounded-full bg-primary/10 text-primary text-[10px] font-bold uppercase tracking-widest">v1.0.0</span>
+                        <span class="px-3 py-1 rounded-full bg-primary/10 text-primary text-[10px] font-bold uppercase tracking-widest">v{version}</span>
                     </div>
                     <p class="text-on-surface/40 text-[11px] font-medium italic">
                         Progettato con ♥️ per scrittori, accademici e sognatori.
