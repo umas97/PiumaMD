@@ -71,4 +71,4 @@ PiumaMD utilizza **Pandoc** come motore per l'esportazione in formati complessi.
 
 Distribuito sotto licenza GNU General Public License v3 (GPLv3). Vedi il file `LICENSE` per maggiori informazioni.
 
-Realizzato con ❤️ da [umas97](https://github.com/umas97)
+Realizzato in vibe coding da [umas97](https://github.com/umas97)
