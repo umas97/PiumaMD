@@ -14,7 +14,7 @@
 	import { showMinimap } from '@replit/codemirror-minimap';
 	
 	import { features } from '$lib/stores/settingsStore';
-	import { jumpSignal, activeFile } from '$lib/stores/fileStore';
+	import { jumpSignal, activeFile, flatFileNames } from '$lib/stores/fileStore';
 
 	let { content = '', onchange } = $props();
 
@@ -67,40 +67,13 @@
 	});
 
 	// --- LOGICA SMART AUTOCOMPLETE (Wikilinks) ---
-	import { fileTree } from '$lib/stores/fileStore';
-	import { get } from 'svelte/store';
-
-	// Ottimizzazione: Lista file piatta calcolata solo quando serve (Memoizzata)
-	let cachedFileTree: any[] = [];
-	let flatFilesCache: string[] = [];
-
-	function getFlatFiles(items: any[]): string[] {
-		if (items === cachedFileTree && flatFilesCache.length > 0) return flatFilesCache;
-		
-		let files: string[] = [];
-		const stack = [...items];
-		while (stack.length > 0) {
-			const item = stack.pop();
-			if (!item.is_dir && item.name.endsWith('.md')) {
-				files.push(item.name.replace(/\.md$/, ''));
-			}
-			if (item.is_dir && item.children) {
-				stack.push(...item.children);
-			}
-		}
-		
-		cachedFileTree = items;
-		flatFilesCache = files;
-		return files;
-	}
-
 	const wikilinkCompletionSource = (context: any) => {
 		// Cerchiamo [[ prima del cursore
 		let before = context.matchBefore(/\[\[([^\]]*)$/);
 		if (!before) return null;
 
-		const currentTree = get(fileTree);
-		const files = getFlatFiles(currentTree);
+		// Utilizziamo lo store derivato flatFileNames già pronto e ottimizzato
+		const files = $flatFileNames;
 		
 		return {
 			from: before.from + 2, // Inizia dopo [[

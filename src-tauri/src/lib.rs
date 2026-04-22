@@ -104,6 +104,10 @@ fn search_project(query: String, root_path: String) -> Result<Vec<SearchMatch>, 
     {
         let path = entry.path();
         if path.is_file() && path.extension().and_then(|s| s.to_str()) == Some("md") {
+            // Salto file troppo grandi (> 1MB) per evitare picchi di memoria e CPU
+            if let Ok(metadata) = fs::metadata(path) {
+                if metadata.len() > 1_000_000 { continue; }
+            }
             if let Ok(content) = fs::read_to_string(path) {
                 // Ricerca case-insensitive ottimizzata
                 for (idx, line) in content.lines().enumerate() {

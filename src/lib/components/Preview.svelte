@@ -49,23 +49,22 @@
 		}
 	}
 
-	// Gestione Reattività Debouncata per Prestazioni
+	// Gestione Reattività Debouncata per Prestazioni (Aumentato a 500ms)
 	let debouncedContent = $state(untrack(() => content));
 	let renderTimeout: ReturnType<typeof setTimeout>;
 
 	$effect(() => {
-		// Accediamo a content per assicurarci che l'effetto sia reattivo ad esso
 		const currentContent = content;
 		
 		clearTimeout(renderTimeout);
 		renderTimeout = setTimeout(() => {
 			debouncedContent = currentContent;
-		}, 300);
+		}, 500);
 		
 		return () => clearTimeout(renderTimeout);
 	});
 
-	// Rendering reattivo Svelte 5 tramite utility centralizzata (usando il contenuto debouncato)
+	// Rendering reattivo Svelte 5 tramite utility centralizzata
 	let renderedContent = $derived.by(() => {
 		try {
 			return renderMarkdown(debouncedContent);
@@ -75,23 +74,25 @@
 		}
 	});
 
-	// Effetto per il rendering di Mermaid (con debounce aggiuntivo)
+	// Effetto per il rendering di Mermaid (Debounce aumentato a 1200ms e controllo condizionale)
 	let mermaidTimeout: ReturnType<typeof setTimeout>;
 	$effect(() => {
-		const _current = renderedContent;
+		const html = renderedContent;
 		if (typeof window !== 'undefined') {
 			clearTimeout(mermaidTimeout);
 			
-			// Se non ci sono nodi mermaid, usciamo subito
+			// Se il contenuto non ha diagrammi mermaid, usciamo subito per risparmiare CPU
+			if (!html.includes('class="mermaid"')) return;
+
 			const nodes = document.querySelectorAll('.mermaid');
 			if (nodes.length === 0) return;
 
-			// Eseguiamo mermaid solo dopo che l'utente ha smesso di scrivere da un po' (500ms)
+			// Eseguiamo mermaid solo dopo una pausa significativa (1.2s)
 			mermaidTimeout = setTimeout(() => {
 				mermaid.run({ 
 					nodes: Array.from(nodes) as HTMLElement[] 
 				}).catch(e => console.error("Mermaid run error:", e));
-			}, 500);
+			}, 1200);
 		}
 		
 		return () => clearTimeout(mermaidTimeout);

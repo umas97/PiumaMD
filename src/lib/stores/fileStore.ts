@@ -1,4 +1,4 @@
-import { writable, get } from 'svelte/store';
+import { writable, get, derived } from 'svelte/store';
 import { invoke } from '@tauri-apps/api/core';
 import { open, save } from '@tauri-apps/plugin-dialog';
 
@@ -36,6 +36,28 @@ let newFileCounter = 1;
 // Stato globale reattivo
 export const currentDir = writable<string | null>(null);
 export const fileTree = writable<FileEntry[]>([]);
+
+/**
+ * Store derivato che appiattisce l'albero dei file in una lista di nomi (senza estensione).
+ * Viene ricalcolato solo quando cambia la struttura del progetto, ottimizzando le prestazioni dell'autocomplete.
+ */
+export const flatFileNames = derived(fileTree, ($fileTree) => {
+	let files: string[] = [];
+	const stack = [...$fileTree];
+	while (stack.length > 0) {
+		const item = stack.pop();
+		if (item) {
+			if (!item.is_dir && item.name.endsWith('.md')) {
+				files.push(item.name.replace(/\.md$/, ''));
+			}
+			if (item.is_dir && item.children) {
+				stack.push(...item.children);
+			}
+		}
+	}
+	return files;
+});
+
 export const openedFiles = writable<OpenedFile[]>([]);
 export const activeFile = writable<string | null>(null); // Global last active
 export const activeFileLeft = writable<string | null>(null);

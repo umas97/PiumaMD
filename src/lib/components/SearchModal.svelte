@@ -30,7 +30,7 @@
 
 	function handleInput() {
 		clearTimeout(searchTimeout);
-		searchTimeout = setTimeout(performSearch, 300);
+		searchTimeout = setTimeout(performSearch, 500);
 	}
 
 	function selectMatch(match: any) {
