@@ -5,6 +5,7 @@ import footnote from 'markdown-it-footnote';
 import katex from 'markdown-it-katex';
 import hljs from 'highlight.js';
 import { convertFileSrc } from '@tauri-apps/api/core';
+import DOMPurify from 'dompurify';
 
 // Helper per rilevare se siamo in ambiente Tauri
 const isTauri = () => typeof window !== 'undefined' && (window as any).__TAURI_INTERNALS__ !== undefined;
@@ -95,5 +96,25 @@ const sharedRenderer = createMarkdownRenderer();
  * Rende una stringa Markdown in HTML utilizzando la configurazione globale
  */
 export function renderMarkdown(content: string): string {
-    return sharedRenderer.render(content || '');
+    const rawHtml = sharedRenderer.render(content || '');
+    
+    // Configurazione DOMPurify per permettere i protocolli asset di Tauri
+    return DOMPurify.sanitize(rawHtml, {
+        ADD_ATTR: ['target'],
+        ALLOWED_TAGS: [
+            'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'blockquote', 'p', 'a', 'ul', 'ol',
+            'nl', 'li', 'b', 'i', 'strong', 'em', 'strike', 'code', 'hr', 'br', 'div',
+            'table', 'thead', 'caption', 'tbody', 'tr', 'th', 'td', 'pre', 'img', 'span',
+            'section', 'article', 'details', 'summary', 'input', 'math', 'semantics', 'mrow',
+            'mi', 'mo', 'msup', 'msub', 'mfrac', 'mover', 'munder', 'msubsup', 'munderover',
+            'msqrt', 'mroot', 'mtext', 'mspace', 'mstyle', 'merror', 'mpadded', 'mphantom', 'mfenced'
+        ],
+        ALLOWED_ATTR: [
+            'href', 'name', 'target', 'src', 'alt', 'title', 'class', 'id', 'type', 
+            'checked', 'disabled', 'style', 'align', 'width', 'height'
+        ],
+        // Permettiamo asset:, data:, blob: e il localhost di Tauri
+        ALLOWED_URI_REGEXP: /^(?:(?:(?:f|ht)tps?|mailto|tel|callto|sms|cid|xmpp|asset|blob|data):|[^a-z]|[a-z+.\-]+(?:[^a-z+.\-:]|$))/i
+    });
 }
+

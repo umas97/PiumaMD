@@ -11,7 +11,7 @@
     "window-state:default",
     {
       "identifier": "fs:default",
-      "scope": ["**/*", "/"]
+      "scope": ["$HOME/**"]
     }
   ]
 }

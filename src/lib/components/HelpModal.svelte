@@ -47,7 +47,7 @@
 
             <!-- Content Area -->
             <div class="flex-1 overflow-y-auto p-12 lg:px-20 bg-surface custom-scrollbar">
-                <article class="markdown-body prose prose-slate max-w-none prose-headings:font-black prose-h1:text-4xl prose-h1:mb-8 prose-h2:border-b prose-h2:pb-2 prose-h2:mt-12 prose-img:rounded-2xl prose-pre:bg-surface-variant/10 prose-pre:border prose-pre:border-outline/5 select-text">
+                <article class="markdown-content select-text">
                     {@html renderedContent}
                 </article>
 

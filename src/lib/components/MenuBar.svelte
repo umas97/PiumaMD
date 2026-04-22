@@ -16,7 +16,6 @@
   import { generateTOC } from "$lib/utils/markdownTools";
   import { renderMarkdown } from "$lib/utils/markdownRenderer";
   import { save, open } from "@tauri-apps/plugin-dialog";
-  import { writeTextFile } from "@tauri-apps/plugin-fs";
   import { invoke } from "@tauri-apps/api/core";
   import { get } from "svelte/store";
   import ThemeModal from "./ThemeModal.svelte";

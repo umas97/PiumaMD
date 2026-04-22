@@ -1,8 +1,8 @@
 use serde::{Deserialize, Serialize};
 use std::fs;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 use walkdir::WalkDir;
-use tauri::{WebviewUrl, WebviewWindowBuilder};
+use tauri::{WebviewUrl, WebviewWindowBuilder, Manager};
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct FileEntry {
@@ -23,59 +23,89 @@ pub struct SearchMatch {
 #[tauri::command]
 fn get_file_tree(root_path: String) -> Result<Vec<FileEntry>, String> {
     let root = Path::new(&root_path);
+    if !root.exists() {
+        return Err("La cartella specificata non esiste".to_string());
+    }
     scan_dir(root)
 }
 
 fn scan_dir(path: &Path) -> Result<Vec<FileEntry>, String> {
     let mut entries = Vec::new();
-    if let Ok(read_dir) = fs::read_dir(path) {
-        for entry in read_dir.flatten() {
-            let path = entry.path();
-            let name = path.file_name().unwrap_or_default().to_string_lossy().to_string();
+    
+    // Leggiamo la directory in modo protetto
+    let read_dir = fs::read_dir(path).map_err(|e| format!("Errore lettura {}: {}", path.display(), e))?;
 
-            if name.starts_with('.') || name == "node_modules" || name == "target" || name == "dist" {
-                continue;
-            }
+    for entry in read_dir.flatten() {
+        let path = entry.path();
+        let name = path.file_name().unwrap_or_default().to_string_lossy().to_string();
 
-            let is_dir = path.is_dir();
-            let children = if is_dir {
-                Some(scan_dir(&path)?)
-            } else {
-                if !name.ends_with(".md") { continue; }
-                None
-            };
-
-            entries.push(FileEntry {
-                name,
-                path: path.to_string_lossy().to_string(),
-                is_dir,
-                children,
-            });
+        // Escludiamo file nascosti e cartelle pesanti per prestazioni
+        if name.starts_with('.') || name == "node_modules" || name == "target" || name == "dist" || name == ".git" {
+            continue;
         }
+
+        let is_dir = path.is_dir();
+        let children = if is_dir {
+            Some(scan_dir(&path)?)
+        } else {
+            if !name.ends_with(".md") { continue; }
+            None
+        };
+
+        entries.push(FileEntry {
+            name,
+            path: path.to_string_lossy().to_string(),
+            is_dir,
+            children,
+        });
     }
+
+    // Ordinamento: cartelle prima, poi file, in ordine alfabetico
     entries.sort_by(|a, b| b.is_dir.cmp(&a.is_dir).then_with(|| a.name.cmp(&b.name)));
     Ok(entries)
 }
 
 #[tauri::command]
 fn read_markdown_file(path: String) -> Result<String, String> {
+    let path = Path::new(&path);
+    // Validazione base: deve esistere ed essere un file
+    if !path.is_file() {
+        return Err("Il percorso specificato non è un file valido".to_string());
+    }
     fs::read_to_string(path).map_err(|e| e.to_string())
 }
 
 #[tauri::command]
 fn save_text_file(path: String, content: String) -> Result<(), String> {
+    let path = Path::new(&path);
+    // Assicuriamoci che la cartella padre esista
+    if let Some(parent) = path.parent() {
+        if !parent.exists() {
+            fs::create_dir_all(parent).map_err(|e| e.to_string())?;
+        }
+    }
     fs::write(path, content).map_err(|e| e.to_string())
 }
 
 #[tauri::command]
 fn search_project(query: String, root_path: String) -> Result<Vec<SearchMatch>, String> {
-    let mut matches = Vec::new();
+    let mut matches = Vec::with_capacity(50);
     let query_lower = query.to_lowercase();
 
-    for entry in WalkDir::new(root_path).into_iter().filter_map(|e| e.ok()) {
+    // Utilizziamo WalkDir con limiti di profondità e gestione errori migliorata
+    for entry in WalkDir::new(root_path)
+        .max_depth(10) // Evita loop infiniti o scansioni troppo profonde
+        .into_iter()
+        .filter_entry(|e| {
+            let name = e.file_name().to_string_lossy();
+            name != "node_modules" && name != "target" && name != ".git"
+        })
+        .filter_map(|e| e.ok()) 
+    {
         let path = entry.path();
         if path.is_file() && path.extension().and_then(|s| s.to_str()) == Some("md") {
             if let Ok(content) = fs::read_to_string(path) {
+                // Ricerca case-insensitive ottimizzata
                 for (idx, line) in content.lines().enumerate() {
                     if line.to_lowercase().contains(&query_lower) {
                         matches.push(SearchMatch {
@@ -85,11 +115,11 @@ fn search_project(query: String, root_path: String) -> Result<Vec<SearchMatch>, 
                             preview: line.trim().to_string(),
                         });
                     }
-                    if matches.len() > 200 { break; } // Limite per prestazioni
+                    if matches.len() >= 100 { break; } 
                 }
             }
         }
-        if matches.len() > 200 { break; }
+        if matches.len() >= 100 { break; }
     }
 
     Ok(matches)
@@ -165,14 +195,34 @@ async fn check_pandoc_exists(app: tauri::AppHandle) -> Result<bool, String> {
 }
 
 #[tauri::command]
-async fn install_pandoc(_app: tauri::AppHandle) -> Result<(), String> {
+async fn install_pandoc(app: tauri::AppHandle) -> Result<(), String> {
     use std::process::Command;
 
-    // Eseguiamo lo script di setup
-    // Nota: In produzione questo potrebbe essere gestito diversamente, 
-    // ma in dev/debug usiamo lo script locale.
-    let output = Command::new("bash")
-        .arg("scripts/setup-pandoc.sh")
+    // Tentativo di risoluzione del percorso dello script in modo più robusto
+    let resource_path = app.path().resource_dir()
+        .map_err(|e| e.to_string())?
+        .join("scripts/setup-pandoc.sh");
+    
+    // In ambiente di sviluppo, proviamo anche il percorso relativo
+    let script_path = if resource_path.exists() {
+        resource_path
+    } else {
+        PathBuf::from("scripts/setup-pandoc.sh")
+    };
+
+    if !script_path.exists() {
+        return Err("Script di installazione non trovato".to_string());
+    }
+
+    #[cfg(unix)]
+    let mut cmd = Command::new("sh");
+    #[cfg(windows)]
+    let mut cmd = Command::new("cmd");
+
+    #[cfg(windows)]
+    cmd.args(&["/C", "bash"]); // Richiede comunque bash su windows per ora, ma gestito via cmd
+
+    let output = cmd.arg(script_path)
         .output()
         .map_err(|e| format!("Impossibile avviare lo script di setup: {}", e))?;
 
