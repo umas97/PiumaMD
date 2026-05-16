@@ -67,6 +67,17 @@ PiumaMD utilizza **Pandoc** come motore per l'esportazione in formati complessi.
 
 ---
 
+## ⚠️ Avviso per gli utenti Windows (SmartScreen)
+
+Poiché questo è un progetto open source, l'eseguibile non possiede una firma digitale commerciale. Di conseguenza, Windows Defender SmartScreen potrebbe bloccare l'avvio dell'app mostrando il messaggio "PC protetto da Windows".
+Per eseguire il programma:
+- Clicca su Ulteriori informazioni (More info).
+- Clicca sul pulsante Esegui comunque (Run anyway).
+
+*Tutto il codice sorgente è pubblico e verificabile in questa repository.*
+
+---
+
 ## 📄 Licenza
 
 Distribuito sotto licenza GNU General Public License v3 (GPLv3). Vedi il file `LICENSE` per maggiori informazioni.
