@@ -14,9 +14,10 @@
 	import { showMinimap } from '@replit/codemirror-minimap';
 	
 	import { features } from '$lib/stores/settingsStore';
-	import { jumpSignal, activeFile, flatFileNames } from '$lib/stores/fileStore';
+	import { jumpSignal, activeFile, flatFileNames, getFileContentStore } from '$lib/stores/fileStore';
+	import { get } from 'svelte/store';
 
-	let { content = '', onchange } = $props();
+	let { path = '', onchange } = $props();
 
 	let editorContainer: HTMLDivElement;
 	let view: EditorView;
@@ -39,9 +40,13 @@
 						 ((window as any).__TAURI_INTERNALS__ !== undefined || 
 						  (window as any).__TAURI_METADATA__ !== undefined);
 
-	// Sincronizzazione contenuto
+	// Sincronizzazione contenuto (solo su cambio file)
+	let currentPath = $state('');
+	
 	$effect(() => {
-		if (view && content !== view.state.doc.toString()) {
+		if (view && path !== currentPath) {
+			currentPath = path;
+			const content = get(getFileContentStore(path));
 			view.dispatch({
 				changes: { from: 0, to: view.state.doc.length, insert: content }
 			});
@@ -157,8 +162,10 @@
 	});
 
 	onMount(async () => {
+		currentPath = path;
+		const initialContent = path ? get(getFileContentStore(path)) : '';
 		const state = EditorState.create({
-			doc: content,
+			doc: initialContent,
 			extensions: [
 				lineNumbers(),
 				history(),

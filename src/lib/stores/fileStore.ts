@@ -23,7 +23,6 @@ export interface FileEntry {
 export interface OpenedFile {
 	path: string;
 	name: string;
-	content: string;
 	isModified: boolean;
 	isEditing: boolean;
 	column: 'left' | 'right';
@@ -32,6 +31,20 @@ export interface OpenedFile {
 
 const UNSAVED_PREFIX = 'piuma://new/';
 let newFileCounter = 1;
+
+// Mappa di store isolati per i testi dei file
+const fileContentsStores = new Map<string, ReturnType<typeof writable<string>>>();
+
+/**
+ * Ottiene o crea uno store reattivo isolato per il testo di un file specifico.
+ * Questo previene il ricalcolo dell'intero array openedFiles ad ogni keystroke.
+ */
+export function getFileContentStore(path: string) {
+	if (!fileContentsStores.has(path)) {
+		fileContentsStores.set(path, writable(''));
+	}
+	return fileContentsStores.get(path)!;
+}
 
 // Stato globale reattivo
 export const currentDir = writable<string | null>(null);
@@ -225,9 +238,12 @@ export function createNewFile() {
 	const path = `${UNSAVED_PREFIX}${id}`;
 	const name = `Senza nome.md`;
 	
+	
+	getFileContentStore(path).set('');
+
 	openedFiles.update(files => [
 		...files, 
-		{ path, name, content: '', isModified: false, isEditing: true, column: get(focusedColumn), isNew: true }
+		{ path, name, isModified: false, isEditing: true, column: get(focusedColumn), isNew: true }
 	]);
 	setActiveInColumn(path, get(focusedColumn));
 }
@@ -256,6 +272,13 @@ export async function saveFile(path: string, content: string) {
 			
 			// Usiamo il comando Rust per scrivere il file (più robusto)
 			await invoke('save_text_file', { path: targetPath, content });
+			
+			// Spostiamo anche il testo nello store con il nuovo percorso
+			const contentStore = getFileContentStore(path);
+			const currentContent = get(contentStore);
+			getFileContentStore(targetPath).set(currentContent);
+			// Rimuoviamo il vecchio store opzionalmente
+			fileContentsStores.delete(path);
 			
 			openedFiles.update(files => files.map(f => 
 				f.path === path ? { 
@@ -292,9 +315,17 @@ export function toggleEditMode(path: string) {
 }
 
 export function updateFileContent(path: string, newContent: string) {
-	openedFiles.update(files => 
-		files.map(f => f.path === path ? { ...f, content: newContent, isModified: true } : f)
-	);
+	// 1. Aggiorna SOLO lo store isolato per il testo. Questo è istantaneo.
+	getFileContentStore(path).set(newContent);
+
+	// 2. Aggiorna lo store globale (array di oggetti) SOLO se isModified cambia da false a true.
+	const files = get(openedFiles);
+	const file = files.find(f => f.path === path);
+	if (file && !file.isModified) {
+		openedFiles.update(fs => 
+			fs.map(f => f.path === path ? { ...f, isModified: true } : f)
+		);
+	}
 
 	clearTimeout(saveTimeout);
 	
@@ -332,10 +363,14 @@ export async function openFile(path?: string) {
 		if (filePath) {
 			const content = await invoke<string>('read_markdown_file', { path: filePath });
 			const name = filePath.split(/[/\\]/).pop() || filePath;
+			
+			// Mettiamo il testo nello store isolato
+			getFileContentStore(filePath).set(content);
+
 			openedFiles.update(files => {
 				const existing = files.find(f => f.path === filePath);
 				if (!existing) {
-					return [...files, { path: filePath!, name, content, isModified: false, isEditing: false, column: get(focusedColumn) }];
+					return [...files, { path: filePath!, name, isModified: false, isEditing: false, column: get(focusedColumn) }];
 				}
 				return files;
 			});

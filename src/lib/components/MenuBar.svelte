@@ -12,6 +12,7 @@
     activeFileLeft,
     activeFileRight,
     setColumnMode,
+    getFileContentStore,
   } from "$lib/stores/fileStore";
   import { generateTOC } from "$lib/utils/markdownTools";
   import { renderMarkdown } from "$lib/utils/markdownRenderer";
@@ -68,7 +69,8 @@
       });
 
       if (selectedPath) {
-        const renderedHtml = renderMarkdown(activeFileData.content);
+        const content = get(getFileContentStore(activeFileData.path));
+        const renderedHtml = renderMarkdown(content);
 
         const htmlTemplate = `<!DOCTYPE html>
 <html lang="it">
@@ -173,9 +175,10 @@
   function insertTOC() {
     if (!activeFileData) return;
     closeMenus();
-    const toc = generateTOC(activeFileData.content);
+    const content = get(getFileContentStore(activeFileData.path));
+    const toc = generateTOC(content);
     if (toc) {
-      updateFileContent(activeFileData.path, toc + activeFileData.content);
+      updateFileContent(activeFileData.path, toc + content);
     }
   }
 
@@ -197,7 +200,8 @@
       if (selected && typeof selected === "string") {
         const encodedPath = encodeURI(selected);
         const imgTag = `\n![Immagine](${encodedPath})\n`;
-        updateFileContent(activeFileData.path, activeFileData.content + imgTag);
+        const content = get(getFileContentStore(activeFileData.path));
+        updateFileContent(activeFileData.path, content + imgTag);
       }
     } catch (e) {
       console.error("Errore inserimento immagine:", e);
@@ -280,10 +284,10 @@
           <button
             onclick={() => {
               closeMenus();
-              saveFile(
-                activeFileData?.path || "",
-                activeFileData?.content || "",
-              );
+              if (activeFileData) {
+                const content = get(getFileContentStore(activeFileData.path));
+                saveFile(activeFileData.path, content);
+              }
             }}
             class="w-full text-left px-3 py-1.5 hover:bg-primary/10 rounded flex items-center gap-3 text-[11px] {!activeFileData
               ? 'opacity-30 pointer-events-none'

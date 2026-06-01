@@ -1,16 +1,30 @@
 <script lang="ts">
-	import { openedFiles, activeFile, autosaveEnabled } from '$lib/stores/fileStore';
+	import { openedFiles, activeFile, autosaveEnabled, getFileContentStore } from '$lib/stores/fileStore';
 
 	// Svelte 5: Uso di $derived per i calcoli basati sugli store
 	let currentFile = $derived($openedFiles.find(f => f.path === $activeFile));
 	
+	let content = $state('');
+
+	$effect(() => {
+		if ($activeFile) {
+			const store = getFileContentStore($activeFile);
+			const unsubscribe = store.subscribe(v => {
+				content = v;
+			});
+			return unsubscribe;
+		} else {
+			content = '';
+		}
+	});
+	
 	let wordCount = $derived(
-		currentFile?.content 
-			? currentFile.content.trim().split(/\s+/).filter(w => w.length > 0).length 
+		content 
+			? content.trim().split(/\s+/).filter(w => w.length > 0).length 
 			: 0
 	);
 	
-	let charCount = $derived(currentFile?.content ? currentFile.content.length : 0);
+	let charCount = $derived(content ? content.length : 0);
 
 	function toggleAutosave() {
 		autosaveEnabled.update(v => !v);

@@ -1,12 +1,26 @@
 <script lang="ts">
 	import { untrack } from 'svelte';
 	import { renderMarkdown } from '$lib/utils/markdownRenderer';
-	import { openFileByName } from '$lib/stores/fileStore';
+	import { openFileByName, getFileContentStore } from '$lib/stores/fileStore';
 	import mermaid from 'mermaid';
 	import 'highlight.js/styles/tokyo-night-dark.css';
 	import 'katex/dist/katex.min.css';
 
-	let { content = '' } = $props();
+	let { path = '', initialContent = '' } = $props();
+
+	let content = $state('');
+
+	$effect(() => {
+		if (path) {
+			const store = getFileContentStore(path);
+			const unsubscribe = store.subscribe(v => {
+				content = v;
+			});
+			return unsubscribe;
+		} else if (initialContent) {
+			content = initialContent;
+		}
+	});
 
 	// Inizializzazione protetta Mermaid
 	if (typeof window !== 'undefined') {
@@ -117,10 +131,6 @@
 </div>
 
 <style>
-	.markdown-content {
-		/* Gli stili base sono ora definiti globalmente in app.css */
-	}
-
 	.custom-scrollbar::-webkit-scrollbar { width: 6px; }
 	.custom-scrollbar::-webkit-scrollbar-thumb {
 		background: var(--md-sys-color-outline);

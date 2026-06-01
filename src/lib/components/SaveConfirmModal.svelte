@@ -1,6 +1,6 @@
 <script lang="ts">
     import { saveConfirmData, closeConfirmation } from '$lib/stores/uiStore';
-    import { saveFile, closeFile, openedFiles } from '$lib/stores/fileStore';
+    import { saveFile, closeFile, openedFiles, getFileContentStore } from '$lib/stores/fileStore';
     import { get } from 'svelte/store';
     import { fade, scale } from 'svelte/transition';
 
@@ -10,7 +10,8 @@
         if (!data) return;
         const file = get(openedFiles).find(f => f.path === data!.path);
         if (file) {
-            await saveFile(file.path, file.content);
+            const content = get(getFileContentStore(file.path));
+            await saveFile(file.path, content);
             // Verifichiamo se il file è stato effettivamente salvato (isModified è diventato false)
             // Se l'utente annulla il dialogo di salvataggio (per i nuovi file), non chiudiamo.
             const updatedFile = get(openedFiles).find(f => f.path === data!.path);

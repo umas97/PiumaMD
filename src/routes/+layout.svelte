@@ -7,7 +7,7 @@
 	import SearchModal from "$lib/components/SearchModal.svelte";
 	import SaveConfirmModal from "$lib/components/SaveConfirmModal.svelte";
 	import HelpModal from "$lib/components/HelpModal.svelte";
-	import { activeFile, openedFiles, saveFile, openFile, closeFile, createNewFile } from "$lib/stores/fileStore";
+	import { activeFile, openedFiles, saveFile, openFile, closeFile, createNewFile, getFileContentStore } from "$lib/stores/fileStore";
 	import { features } from "$lib/stores/settingsStore";
 	import { isSearchModalOpen, openHelp, requestCloseConfirmation, closeHelp } from "$lib/stores/uiStore";
 	import { onMount } from "svelte";
@@ -53,9 +53,9 @@
 			const path = get(activeFile);
 			const files = get(openedFiles);
 			const file = files.find(f => f.path === path);
-			
 			if (file) {
-				saveFile(file.path, file.content);
+				const content = get(getFileContentStore(file.path));
+				saveFile(file.path, content);
 			}
 		}
 

@@ -1,12 +1,11 @@
 <script lang="ts">
     import { isHelpModalOpen, closeHelp } from '$lib/stores/uiStore';
-    import { renderMarkdown } from '$lib/utils/markdownRenderer';
     import { fade, scale } from 'svelte/transition';
     import guideContent from '$lib/assets/user_guide.md?raw';
     import { onMount } from 'svelte';
     import { getVersion } from '@tauri-apps/api/app';
+    import Preview from './Preview.svelte';
 
-    let renderedContent = $derived(renderMarkdown(guideContent));
     let version = $state('...');
 
     onMount(async () => {
@@ -46,16 +45,15 @@
             </div>
 
             <!-- Content Area -->
-            <div class="flex-1 overflow-y-auto p-12 lg:px-20 bg-surface custom-scrollbar">
-                <article class="markdown-content select-text">
-                    {@html renderedContent}
-                </article>
+            <div class="flex-1 relative overflow-hidden bg-surface">
+                <Preview initialContent={guideContent} />
 
-                <div class="mt-16 pt-8 border-t border-outline/10 flex flex-col items-center gap-4 text-center">
-                    <div class="flex gap-4">
-                        <span class="px-3 py-1 rounded-full bg-primary/10 text-primary text-[10px] font-bold uppercase tracking-widest">v{version}</span>
+                <!-- Footer content overlay -->
+                <div class="absolute bottom-0 left-0 right-0 p-8 flex flex-col items-center gap-4 text-center bg-gradient-to-t from-surface via-surface/80 to-transparent pointer-events-none">
+                    <div class="flex gap-4 pointer-events-auto">
+                        <span class="px-3 py-1 rounded-full bg-primary/10 text-primary text-[10px] font-bold uppercase tracking-widest bg-surface/80">v{version}</span>
                     </div>
-                    <p class="text-on-surface/40 text-[11px] font-medium italic">
+                    <p class="text-on-surface/40 text-[11px] font-medium italic pointer-events-auto">
                         Progettato con ♥️ per scrittori, accademici e sognatori.
                     </p>
                 </div>
@@ -75,17 +73,4 @@
 {/if}
 
 <style>
-    .custom-scrollbar::-webkit-scrollbar {
-        width: 6px;
-    }
-    .custom-scrollbar::-webkit-scrollbar-track {
-        background: transparent;
-    }
-    .custom-scrollbar::-webkit-scrollbar-thumb {
-        background: rgba(var(--primary-rgb), 0.1);
-        border-radius: 10px;
-    }
-    .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-        background: rgba(var(--primary-rgb), 0.2);
-    }
 </style>

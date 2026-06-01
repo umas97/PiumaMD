@@ -46,13 +46,13 @@
 					{#if file.isEditing}
 						<div class="flex-1 h-full border-r border-outline/10 animate-in slide-in-from-left duration-300">
 							<Editor 
-								content={file.content} 
+								path={file.path} 
 								onchange={(val: string) => handleContentChange(file.path, val)} 
 							/>
 						</div>
 					{/if}
 					<div class="flex-1 h-full overflow-hidden">
-						<Preview content={file.content} />
+						<Preview path={file.path} />
 					</div>
 
 					<button 
