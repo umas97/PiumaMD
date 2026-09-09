@@ -1,0 +1,18 @@
+{
+"menu.file":"File","menu.edit":"Edit","menu.view":"View","menu.insert":"Insert","menu.help":"Help",
+"cmd.new":"New document","cmd.openFolder":"Open folder…","cmd.save":"Save","cmd.export":"Export…","cmd.closeTab":"Close tab",
+"cmd.bold":"Bold","cmd.italic":"Italic","cmd.strike":"Strikethrough","cmd.link":"Insert link","cmd.comment":"Toggle comment",
+"cmd.find":"Find in document","cmd.searchAll":"Search in project",
+"cmd.viewEditor":"Editor only","cmd.viewPreview":"Preview only","cmd.viewSplit":"Split",
+"cmd.toggleSidebar":"Show sidebar","cmd.toggleSync":"Synchronised scrolling","cmd.refresh":"Refresh preview",
+"cmd.insertTable":"Table","cmd.insertToc":"Table of contents","cmd.insertCode":"Code block","cmd.insertRule":"Horizontal rule","cmd.insertWiki":"Wikilink",
+"cmd.help":"Guide","cmd.about":"About",
+"theme.light":"Light","theme.dark":"Dark","lang.it":"Italiano","lang.en":"English",
+"lang.restart":"The language changes the next time the window opens.",
+"tree.filter":"Filter files…","find.ph":"Find…","untitled":"untitled.md","table.col":"Column",
+"welcome.sub":"A light Markdown editor.","welcome.open":"Open folder","welcome.new":"New document","welcome.help":"Guide","welcome.recent":"Recent",
+"st.line":"line","st.autosave":"Autosave","st.saved":"saved","st.unsaved":"unsaved",
+"st.manual":"manual preview (Ctrl+R)","st.plain":"highlighting off",
+"confirm.close":"“%s” has unsaved changes. Close anyway?",
+"confirm.conflict":"The file changed on disk. OK to overwrite, Cancel to reload."
+}

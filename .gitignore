@@ -1,0 +1,9 @@
+__pycache__/
+*.py[cod]
+.venv/
+*.egg-info/
+build/
+dist/
+.pytest_cache/
+src/piumamd/static/vendor/*
+!src/piumamd/static/vendor/.gitkeep

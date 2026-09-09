@@ -1,0 +1,13 @@
+[Desktop Entry]
+Type=Application
+Name=PiumaMD
+GenericName=Markdown Editor
+Comment=Lightweight Markdown viewer and editor
+Comment[it]=Visualizzatore ed editor Markdown leggero
+Exec=piumamd %f
+Icon=piumamd
+Terminal=false
+Categories=Office;TextEditor;
+MimeType=text/markdown;text/x-markdown;
+Keywords=markdown;md;editor;notes;
+StartupNotify=true

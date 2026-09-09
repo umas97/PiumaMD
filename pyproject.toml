@@ -1,0 +1,41 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "piumamd"
+version = "0.1.0"
+description = "Visualizzatore ed editor Markdown leggero per Linux"
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "GPL-3.0-or-later" }
+authors = [{ name = "PiumaMD" }]
+dependencies = [
+    "pywebview>=4.4",
+    "mistune>=3.0",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=7"]
+
+[project.scripts]
+piumamd = "piumamd.cli:main"
+
+[tool.setuptools]
+package-dir = { "" = "src" }
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+piumamd = [
+    "static/*.html",
+    "static/css/*.css",
+    "static/js/*.js",
+    "static/icons/*.svg",
+    "static/locales/*.json",
+    "static/help/*.md",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

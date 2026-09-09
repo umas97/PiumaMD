@@ -1,0 +1,18 @@
+{
+"menu.file":"File","menu.edit":"Modifica","menu.view":"Visualizza","menu.insert":"Inserisci","menu.help":"Aiuto",
+"cmd.new":"Nuovo documento","cmd.openFolder":"Apri cartella…","cmd.save":"Salva","cmd.export":"Esporta…","cmd.closeTab":"Chiudi scheda",
+"cmd.bold":"Grassetto","cmd.italic":"Corsivo","cmd.strike":"Barrato","cmd.link":"Inserisci link","cmd.comment":"Commenta / decommenta",
+"cmd.find":"Cerca nel documento","cmd.searchAll":"Cerca nel progetto",
+"cmd.viewEditor":"Solo editor","cmd.viewPreview":"Solo anteprima","cmd.viewSplit":"Affiancati",
+"cmd.toggleSidebar":"Mostra barra laterale","cmd.toggleSync":"Scroll sincronizzato","cmd.refresh":"Aggiorna anteprima",
+"cmd.insertTable":"Tabella","cmd.insertToc":"Indice","cmd.insertCode":"Blocco di codice","cmd.insertRule":"Riga orizzontale","cmd.insertWiki":"Wikilink",
+"cmd.help":"Guida","cmd.about":"Informazioni",
+"theme.light":"Chiaro","theme.dark":"Scuro","lang.it":"Italiano","lang.en":"English",
+"lang.restart":"La lingua cambia alla prossima apertura della finestra.",
+"tree.filter":"Filtra i file…","find.ph":"Cerca…","untitled":"senza titolo.md","table.col":"Colonna",
+"welcome.sub":"Un editor Markdown leggero.","welcome.open":"Apri cartella","welcome.new":"Nuovo documento","welcome.help":"Guida","welcome.recent":"Recenti",
+"st.line":"riga","st.autosave":"Autosalvataggio","st.saved":"salvato","st.unsaved":"non salvato",
+"st.manual":"anteprima manuale (Ctrl+R)","st.plain":"evidenziazione disattivata",
+"confirm.close":"«%s» ha modifiche non salvate. Chiudere comunque?",
+"confirm.conflict":"Il file è cambiato su disco. OK per sovrascriverlo, Annulla per ricaricarlo."
+}

@@ -1,0 +1,113 @@
+/* Stili dell'HTML renderato dal backend. */
+
+#preview > :first-child { margin-top: 0; }
+#preview h1, #preview h2, #preview h3, #preview h4, #preview h5, #preview h6 {
+  margin: 1.4em 0 .5em;
+  line-height: 1.25;
+  color: var(--md-head);
+}
+#preview h1 { font-size: 1.85em; padding-bottom: .25em; border-bottom: 1px solid var(--border); }
+#preview h2 { font-size: 1.45em; padding-bottom: .2em; border-bottom: 1px solid var(--border); }
+#preview h3 { font-size: 1.2em; }
+#preview h4, #preview h5, #preview h6 { font-size: 1em; }
+
+#preview p, #preview ul, #preview ol, #preview blockquote, #preview table, #preview pre {
+  margin: 0 0 .9em;
+}
+#preview { line-height: 1.65; }
+#preview ul, #preview ol { padding-left: 1.6em; }
+#preview li { margin: .18em 0; }
+#preview li > input[type="checkbox"] { margin-right: .5em; }
+#preview li.task-list-item { list-style: none; margin-left: -1.3em; }
+
+#preview a { color: var(--md-link); text-decoration: none; }
+#preview a:hover { text-decoration: underline; }
+#preview a.wikilink { border-bottom: 1px dotted var(--md-link); }
+#preview a.wikilink-missing { color: var(--danger); border-bottom-color: var(--danger); }
+
+#preview blockquote {
+  padding: .1em 1em;
+  border-left: 3px solid var(--border);
+  color: var(--md-quote);
+}
+
+#preview hr { height: 1px; margin: 1.6em 0; border: 0; background: var(--border); }
+
+#preview code {
+  padding: .15em .35em;
+  background: var(--code-bg);
+  border-radius: 4px;
+  font-family: ui-monospace, "DejaVu Sans Mono", monospace;
+  font-size: .89em;
+}
+
+#preview pre {
+  padding: .8em 1em;
+  overflow-x: auto;
+  background: var(--code-bg);
+  border: 1px solid var(--border);
+  border-radius: 7px;
+}
+
+#preview pre code { padding: 0; background: none; }
+
+#preview table { border-collapse: collapse; display: block; overflow-x: auto; max-width: 100%; }
+#preview th, #preview td { padding: .4em .7em; border: 1px solid var(--border); }
+#preview th { background: var(--bg-alt); }
+#preview tbody tr:nth-child(2n) { background: var(--bg-alt); }
+#preview .align-left { text-align: left; }
+#preview .align-center { text-align: center; }
+#preview .align-right { text-align: right; }
+
+#preview img { max-width: 100%; border-radius: 5px; }
+
+#preview details.frontmatter {
+  margin-bottom: 1.2em;
+  padding: .4em .8em;
+  background: var(--bg-alt);
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  color: var(--fg-dim);
+  font-size: .92em;
+}
+#preview details.frontmatter summary { cursor: pointer; }
+#preview details.frontmatter table { margin: .5em 0 .2em; }
+#preview details.frontmatter th { text-align: left; white-space: nowrap; }
+
+#preview section.footnotes {
+  margin-top: 2em;
+  padding-top: .8em;
+  border-top: 1px solid var(--border);
+  font-size: .92em;
+}
+#preview sup.footnote-ref a { padding: 0 .15em; }
+
+#preview .math-block { margin: 1em 0; padding: .6em; overflow-x: auto; text-align: center; }
+#preview .math-inline, #preview .math-block { font-family: ui-monospace, monospace; }
+#preview .math-inline.rendered, #preview .math-block.rendered { font-family: inherit; }
+
+#preview .mermaid-block { margin: 1em 0; text-align: center; }
+#preview .mermaid-block svg { max-width: 100%; height: auto; }
+
+#preview .vendor-missing {
+  display: grid;
+  gap: .5em;
+  padding: .8em 1em;
+  text-align: left;
+  background: var(--bg-alt);
+  border: 1px dashed var(--border);
+  border-radius: 7px;
+}
+#preview .vendor-missing .why { color: var(--fg-dim); font-size: .9em; }
+#preview .vendor-missing code { user-select: all; }
+#preview .vendor-missing pre { margin: 0; background: var(--code-bg); }
+
+#preview .scroll-target { background: var(--sel); }
+
+/* Evidenziazione del codice (backend, classi hl-*) */
+.hl-com { color: var(--hl-com); font-style: italic; }
+.hl-str { color: var(--hl-str); }
+.hl-num { color: var(--hl-num); }
+.hl-kw  { color: var(--hl-kw); }
+.hl-bi  { color: var(--hl-bi); }
+.hl-fn  { color: var(--hl-fn); }
