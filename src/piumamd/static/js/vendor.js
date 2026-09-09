@@ -2,7 +2,12 @@
 // contiene davvero diagrammi o formule; se l'asset manca non parte nessuna
 // richiesta: il backend ci ha gia' detto in /api/config cosa c'e' su disco.
 import { S } from './store.js';
-import { t } from './i18n.js';
+import * as I from './i18n.js';
+
+// I testi dei segnaposto stanno nel catalogo esteso: senza questa attesa
+// comparirebbe la chiave grezza al posto della frase.
+await I.extra();
+const t = I.t;
 
 let mermaid = null;
 let katex = null;
@@ -21,10 +26,23 @@ function placeholder(el, source, kind) {
   el.replaceChildren(box);
 }
 
+// mermaid e KaTeX sono build UMD: si caricano con un <script>, non con
+// import(), che su un file non-modulo fallirebbe.
+function loadScript(src) {
+  return new Promise((resolve, reject) => {
+    const el = document.createElement('script');
+    el.src = src;
+    el.onload = () => resolve();
+    el.onerror = () => reject(new Error(src));
+    document.head.append(el);
+  });
+}
+
 async function loadMermaid() {
   if (mermaid) return mermaid;
-  const mod = await import('../vendor/mermaid.min.js');
-  mermaid = mod.default || window.mermaid;
+  await loadScript('vendor/mermaid.min.js');
+  mermaid = window.mermaid;
+  if (!mermaid) throw new Error('mermaid');
   mermaid.initialize({ startOnLoad: false, securityLevel: 'strict', theme: 'neutral' });
   return mermaid;
 }
@@ -77,8 +95,9 @@ async function loadKatex() {
     link.href = 'vendor/katex.min.css';
     document.head.appendChild(link);
   }
-  const mod = await import('../vendor/katex.min.js');
-  katex = mod.default || window.katex;
+  await loadScript('vendor/katex.min.js');
+  katex = window.katex;
+  if (!katex) throw new Error('katex');
   return katex;
 }
 
