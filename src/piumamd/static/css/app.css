@@ -207,15 +207,25 @@ button, input, select, textarea { font: inherit; color: inherit; }
 }
 
 .editor-hl {
+  /* Niente inset:0 ne' overflow:hidden qui: il <pre> deve essere alto quanto
+     il suo contenuto, altrimenti translateY sposta via una scatola alta una
+     schermata e l'evidenziazione sparisce appena si scorre. A ritagliare
+     pensa .editor-wrap. */
   position: absolute;
-  inset: 0;
-  overflow: hidden;
+  top: 0;
+  left: 0;
+  right: 0;
   pointer-events: none;
   color: var(--fg);
   will-change: transform;
 }
 
 .editor-hl code { font: inherit; }
+
+/* Le tre parti dell'overlay (prima della finestra visibile, finestra, dopo)
+   sono blocchi distinti: da span inline sarebbero un unico flusso, e cambiare
+   la finestra rifarebbe il layout dell'intero documento a ogni tasto. */
+.editor-hl code > span { display: block; }
 
 .editor-input {
   position: absolute;

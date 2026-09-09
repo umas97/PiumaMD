@@ -48,8 +48,19 @@ E.setOnChange(() => {
   autosave();
 });
 // Contesto del cursore: due regex per evento, i moduli arrivano se servono.
+let statusAt = 0;
+let statusTail = 0;
+
+// Barra di stato: cosmetica, quindi con throttle e un colpo di coda.
+function status() {
+  const now = performance.now();
+  clearTimeout(statusTail);
+  if (now - statusAt > 200) { statusAt = now; C.status(); }
+  else statusTail = setTimeout(() => { statusAt = performance.now(); C.status(); }, 200);
+}
+
 function context() {
-  C.status();
+  status();
   const before = E.ed.value.slice(0, E.ed.selectionStart);
   if (/\[\[[^\]\n]*$/.test(before)) {
     import('./wiki.js').then((m) => m.complete());
@@ -91,7 +102,6 @@ async function boot() {
   document.body.style.setProperty('--preview-ratio', cfg.preview_ratio ?? 0.5);
   I.applyDom();
   C.applyView(cfg.view_mode || 'split');
-  C.marks();
 
   if (cfg.root) {
     try { await Tree.load(); } catch (e) { window.toast(e, true); }

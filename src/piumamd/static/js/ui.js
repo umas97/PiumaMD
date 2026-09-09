@@ -85,6 +85,8 @@ export function message(title, text) {
 
 // ---------- schermata di benvenuto ----------
 export function welcome() {
+  // welcome.recent sta nel catalogo esteso: la sezione si ritraduce qui
+  I.applyDom($('#welcome'));
   const box = $('#recent');
   const home = S.cfg.home || '';
   box.replaceChildren(...(S.cfg.recent || []).slice(0, 10).map((p) => {

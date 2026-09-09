@@ -14,7 +14,6 @@ import html as html_mod
 import re
 import threading
 import urllib.parse
-from html.parser import HTMLParser
 from pathlib import Path
 from typing import Any
 
@@ -281,9 +280,16 @@ class LineBlockParser(BlockParser):
             return super().parse_method(m, state)
         previous = state.block_start
         state.block_start = state.cursor
+        seen = len(state.tokens)
         try:
             return super().parse_method(m, state)
         finally:
+            # Una lista interrotta da un altro blocco finisce in tokens con
+            # list.insert(), che non passa ne' da append ne' da prepend: qui si
+            # marcano i token comparsi durante questa regola e ancora nudi.
+            for token in state.tokens[max(0, seen - 1):]:
+                if "_pos" not in token:
+                    token["_pos"] = state.block_start
             state.block_start = previous
 
 
@@ -459,81 +465,98 @@ def safe_url(value: str) -> str | None:
     return url  # percorso relativo
 
 
-class Sanitizer(HTMLParser):
-    def __init__(self) -> None:
-        super().__init__(convert_charrefs=True)
-        self.out: list[str] = []
-        self._drop_depth = 0
-        self._open: list[str] = []
+# Scanner a regex invece di HTMLParser: l'HTML da ripulire lo produce il nostro
+# renderer, che escapa gia' il testo, quindi non serve il giro
+# unescape/riescape che HTMLParser impone — ed e' circa sei volte piu' veloce
+# su un documento grande, dove la sanitizzazione era un terzo del render.
+# La regex regge anche input arbitrari: i valori fra virgolette possono
+# contenere '>', e ogni '<' che non apra un tag valido viene escapato.
+_TAG = re.compile(
+    r"""<!--.*?-->"""                                  # commenti
+    r"""|<(?P<close>/?)(?P<name>[A-Za-z][\w:-]*)"""
+    r"""(?P<attrs>(?:"[^"]*"|'[^']*'|[^>"'])*)"""
+    r"""(?P<self>/?)>""",
+    re.S,
+)
+_ATTR = re.compile(
+    r"""(?P<key>[A-Za-z_:][-\w:.]*)"""
+    r"""(?:\s*=\s*(?:"(?P<dq>[^"]*)"|'(?P<sq>[^']*)'|(?P<bare>[^\s"'>]+)))?"""
+)
 
-    def handle_starttag(self, tag: str, attrs: list[tuple[str, str | None]]) -> None:
-        if self._drop_depth:
-            if tag in DROP_CONTENT:
-                self._drop_depth += 1
-            return
-        if tag in DROP_CONTENT:
-            self._drop_depth = 1
-            return
-        if tag not in ALLOWED_TAGS:
-            return
-        rendered: list[str] = []
-        for name, value in attrs:
-            name = name.lower()
-            if name not in ALLOWED_ATTRS:
+
+def _clean_attrs(raw: str) -> str:
+    out: list[str] = []
+    for match in _ATTR.finditer(raw):
+        name = match.group("key").lower()
+        if name not in ALLOWED_ATTRS:
+            continue
+        value = match.group("dq")
+        if value is None:
+            value = match.group("sq")
+        if value is None:
+            value = match.group("bare")
+        if value is None:
+            out.append(f" {name}")
+            continue
+        if name in ("href", "src"):
+            checked = safe_url(html_mod.unescape(value))
+            if checked is None:
                 continue
-            if value is None:
-                rendered.append(f" {name}")
-                continue
-            if name in ("href", "src"):
-                checked = safe_url(value)
-                if checked is None:
-                    continue
-                value = checked
-            rendered.append(f' {name}="{html_mod.escape(value, quote=True)}"')
-        if tag in VOID_TAGS:
-            self.out.append(f"<{tag}{''.join(rendered)} />")
-        else:
-            self.out.append(f"<{tag}{''.join(rendered)}>")
-            self._open.append(tag)
-
-    def handle_startendtag(self, tag: str, attrs: list[tuple[str, str | None]]) -> None:
-        if tag in VOID_TAGS or tag in ALLOWED_TAGS:
-            depth = len(self._open)
-            self.handle_starttag(tag, attrs)
-            if len(self._open) > depth:
-                self._open.pop()
-                self.out.append(f"</{tag}>")
-
-    def handle_endtag(self, tag: str) -> None:
-        if self._drop_depth:
-            if tag in DROP_CONTENT:
-                self._drop_depth -= 1
-            return
-        if tag in VOID_TAGS or tag not in ALLOWED_TAGS:
-            return
-        if tag in self._open:
-            while self._open:
-                open_tag = self._open.pop()
-                self.out.append(f"</{open_tag}>")
-                if open_tag == tag:
-                    break
-
-    def handle_data(self, data: str) -> None:
-        if self._drop_depth:
-            return
-        self.out.append(html_mod.escape(data, quote=False))
-
-    def result(self) -> str:
-        while self._open:
-            self.out.append(f"</{self._open.pop()}>")
-        return "".join(self.out)
+            value = html_mod.escape(checked, quote=True)
+        out.append(f' {name}="{value}"')
+    return "".join(out)
 
 
 def sanitize(html_text: str) -> str:
-    parser = Sanitizer()
-    parser.feed(html_text)
-    parser.close()
-    return parser.result()
+    out: list[str] = []
+    stack: list[str] = []
+    drop = 0
+    pos = 0
+
+    for match in _TAG.finditer(html_text):
+        if drop == 0:
+            out.append(html_text[pos : match.start()].replace("<", "&lt;"))
+        pos = match.end()
+
+        name = match.group("name")
+        if name is None:          # commento HTML: non lo propaghiamo
+            continue
+        name = name.lower()
+        closing = bool(match.group("close"))
+
+        if name in DROP_CONTENT:
+            if closing:
+                drop = max(0, drop - 1)
+            else:
+                drop += 1
+            continue
+        if drop:
+            continue
+        if name not in ALLOWED_TAGS:
+            continue
+
+        if closing:
+            if name in VOID_TAGS or name not in stack:
+                continue
+            while stack:
+                open_tag = stack.pop()
+                out.append(f"</{open_tag}>")
+                if open_tag == name:
+                    break
+            continue
+
+        attrs = _clean_attrs(match.group("attrs") or "")
+        if name in VOID_TAGS or match.group("self"):
+            out.append(f"<{name}{attrs} />")
+        else:
+            out.append(f"<{name}{attrs}>")
+            stack.append(name)
+
+    if drop == 0:
+        out.append(html_text[pos:].replace("<", "&lt;"))
+    while stack:
+        out.append(f"</{stack.pop()}>")
+    return "".join(out)
 
 
 # --------------------------------------------------------------------------

@@ -25,39 +25,12 @@ const CMD = {
   italic: () => E.wrapSel('*'),
   refresh: () => P.schedule(true),
   quickOpen: () => Tree.focusFilter(),
-  link: () => {
-    const [a, b] = E.sel();
-    const label = E.ed.value.slice(a, b);
-    E.replaceRange(a, b, '[' + label + ']()', a + label.length + 3);
-  },
-  comment: () => {
-    const [a, b] = E.sel();
-    const s = E.lineStart(a), e = E.lineEnd(b);
-    const block = E.ed.value.slice(s, e);
-    const on = /^\s*<!--/.test(block);
-    const next = on ? block.replace(/<!--\s?/, '').replace(/\s?-->/, '') : '<!-- ' + block + ' -->';
-    E.replaceRange(s, e, next, s, s + next.length);
-  },
 };
 
 export function run(name) {
   const fn = CMD[name];
   const p = fn ? Promise.resolve(fn()) : import('./actions.js').then((m) => m.run(name));
   p.catch((err) => window.toast(err, true));
-}
-
-// Spunte nei menu, ricalcolate solo all'apertura.
-export function marks() {
-  document.querySelectorAll('[data-cmd]').forEach((el) => {
-    const c = el.dataset.cmd;
-    let on = null;
-    if (c.startsWith('theme:')) on = S.cfg.theme === c.slice(6);
-    else if (c.startsWith('view:')) on = S.cfg.view_mode === c.slice(5);
-    else if (c.startsWith('lang:')) on = S.lang === c.slice(5);
-    else if (c === 'toggleSync') on = !!S.cfg.sync_scroll;
-    else if (c === 'toggleAutosave') on = !!S.cfg.autosave;
-    if (on !== null) el.setAttribute('aria-checked', on);
-  });
 }
 
 export function status() {
@@ -93,7 +66,7 @@ document.addEventListener('click', (e) => {
       openMenu = btn.dataset.menu;
       $('.menu-drop[data-for="' + openMenu + '"]').hidden = false;
       btn.setAttribute('aria-expanded', 'true');
-      marks();
+      import('./actions.js').then((m) => m.marks());
     }
     return;
   }

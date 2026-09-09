@@ -6,8 +6,14 @@ import { ed } from './editor.js';
 
 const box = $('#preview');
 const MANUAL_OVER = 300 * 1024;
+// Quota di CPU concessa all'anteprima mentre si digita: su un documento
+// piccolo il debounce resta 120 ms, su uno grande si dirada. Vedi il README.
+const CPU_SHARE = 0.04;
+const MAX_WAIT = 1500;
 let timer = 0;
 let sync = null;
+let cost = 0;        // durata dell'ultimo aggiornamento, misurata
+let lastEnd = 0;
 export let manual = false;
 
 // Lo scroll sincronizzato serve solo da quando si scrolla davvero.
@@ -26,17 +32,26 @@ export function schedule(force) {
   manual = t.content.length > MANUAL_OVER;
   if (manual && !force) return;
   clearTimeout(timer);
-  timer = setTimeout(run, force ? 0 : 120);
+  let wait = 0;
+  if (!force) {
+    wait = 120;
+    const gap = Math.min(MAX_WAIT, cost / CPU_SHARE) - (performance.now() - lastEnd);
+    if (gap > wait) wait = gap;
+  }
+  timer = setTimeout(run, wait);
 }
 
 async function run() {
   const t = tab();
   if (!t) return;
+  const started = performance.now();
   let res;
   try { res = await api.render(t.content, t.path || null); } catch (_) { return; }
   if (tab() !== t) return;
   t.toc = res.toc;
   apply(res.html, res.needs);
+  cost = performance.now() - started;
+  lastEnd = performance.now();
 }
 
 // I wikilink si risolvono sull'albero gia' in memoria: nessuna richiesta.

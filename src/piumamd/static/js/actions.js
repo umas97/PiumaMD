@@ -6,11 +6,26 @@ import * as I from './i18n.js';
 import * as E from './editor.js';
 import * as T from './tabs.js';
 import * as Tree from './tree.js';
-import { setCfg, applyView, marks, status } from './commands.js';
+import { setCfg, applyView, status } from './commands.js';
 import { message, welcome as uiWelcome } from './ui.js';
 
 const t = I.t;
 export const welcome = uiWelcome;
+
+// Spunte nei menu, ricalcolate solo all'apertura.
+export function marks() {
+  document.querySelectorAll('[data-cmd]').forEach((el) => {
+    const c = el.dataset.cmd;
+    let on = null;
+    if (c.startsWith('theme:')) on = S.cfg.theme === c.slice(6);
+    else if (c.startsWith('view:')) on = S.cfg.view_mode === c.slice(5);
+    else if (c.startsWith('lang:')) on = S.lang === c.slice(5);
+    else if (c === 'toggleSync') on = !!S.cfg.sync_scroll;
+    else if (c === 'toggleAutosave') on = !!S.cfg.autosave;
+    if (on !== null) el.setAttribute('aria-checked', on);
+  });
+}
+
 
 // ---------- ricerca nel documento ----------
 // Lo stato vive nel modulo: la barra si aggancia una sola volta.
@@ -122,6 +137,19 @@ const ACT = {
   help: openHelp,
   about: () => message(t('cmd.about'), t('about.text')),
   strike: () => E.wrapSel('~~'),
+  link: () => {
+    const [a, b] = E.sel();
+    const label = E.ed.value.slice(a, b);
+    E.replaceRange(a, b, '[' + label + ']()', a + label.length + 3);
+  },
+  comment: () => {
+    const [a, b] = E.sel();
+    const s = E.lineStart(a), e = E.lineEnd(b);
+    const block = E.ed.value.slice(s, e);
+    const on = /^\s*<!--/.test(block);
+    const next = on ? block.replace(/<!--\s?/, '').replace(/\s?-->/, '') : '<!-- ' + block + ' -->';
+    E.replaceRange(s, e, next, s, s + next.length);
+  },
   toggleSidebar: () => $('#main').classList.toggle('no-sidebar'),
   toggleSync: () => { setCfg({ sync_scroll: !S.cfg.sync_scroll }); marks(); },
   toggleAutosave: () => { setCfg({ autosave: !S.cfg.autosave }); status(); marks(); },

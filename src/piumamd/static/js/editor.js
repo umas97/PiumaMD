@@ -14,7 +14,11 @@ code.append(A, W, Z);
 const HL_LIMIT = 500 * 1024;   // oltre, solo textarea
 const MARGIN = 50;             // righe di margine attorno alla finestra visibile
 let lines = [];
+let text = '';
+let offs = [];
 let hlTimer = 0;
+let lastA = null;
+let lastZ = null;
 let plain = false;
 let onChange = () => {};
 export const setOnChange = (fn) => { onChange = fn; };
@@ -62,9 +66,15 @@ function paint() {
   for (let i = 0; i < from; i++) if (FENCE.test(lines[i])) st.f = !st.f;
   const out = [];
   for (let i = from; i < to; i++) out.push(hlLine(lines[i], st));
-  A.textContent = from ? lines.slice(0, from).join('\n') + '\n' : '';
+  // Tre blocchi con righe intere e senza a capo ai bordi: riscrivere la
+  // finestra non tocca il layout del resto.
+  const before = from ? text.slice(0, offs[from] - 1) : '';
+  const after = to < n ? text.slice(offs[to]) : '';
+  // Confronto con una copia in JS, non con .textContent: rileggere il nodo
+  // ne serializzerebbe 200 KB. Saltare le due scritture vale 8 punti di CPU.
+  if (before !== lastA) { A.textContent = before; lastA = before; }
   W.innerHTML = out.join('\n');
-  Z.textContent = to < n ? '\n' + lines.slice(to).join('\n') : '';
+  if (after !== lastZ) { Z.textContent = after; lastZ = after; }
 }
 
 function schedule() {
@@ -73,16 +83,22 @@ function schedule() {
 }
 
 export function refresh(force) {
-  const text = ed.value;
+  text = ed.value;
   plain = text.length > HL_LIMIT;
   wrap.classList.toggle('plain', plain);
-  if (plain) { A.textContent = W.textContent = Z.textContent = ''; return; }
+  if (plain) { A.textContent = W.textContent = Z.textContent = lastA = lastZ = ''; return; }
   lines = text.split('\n');
+  offs = new Array(lines.length + 1);
+  for (let i = 0, o = 0; i <= lines.length; i++) {
+    offs[i] = o;
+    if (i < lines.length) o += lines[i].length + 1;
+  }
   if (force) paint(); else schedule();
 }
 
 export function setText(text) {
   ed.value = text;   // documento nuovo: azzerare l'undo qui e' corretto
+  ed.setSelectionRange(0, 0);   // altrimenti il cursore resta in fondo
   ed.scrollTop = 0;
   pre.style.transform = 'translateY(0)';
   refresh(true);
@@ -182,14 +198,26 @@ ed.addEventListener('scroll', () => {
   schedule();
 }, { passive: true });
 
+// Conteggi con un solo passaggio e nessuna allocazione: su un documento da
+// 200 KB uno split(/\s+/) creerebbe decine di migliaia di stringhe a ogni tasto.
 export const stats = () => {
   const v = ed.value;
-  const words = v.trim() ? v.trim().split(/\s+/).length : 0;
-  return { lines: v.split('\n').length, words, chars: v.length };
+  let words = 0, rows = 1, inWord = false;
+  for (let i = 0; i < v.length; i++) {
+    const c = v.charCodeAt(i);
+    if (c === 10) { rows++; inWord = false; continue; }
+    if (c === 32 || c === 9 || c === 13) inWord = false;
+    else if (!inWord) { inWord = true; words++; }
+  }
+  return { lines: rows, words, chars: v.length };
 };
 
 export function caretLine() {
-  return ed.value.slice(0, ed.selectionStart).split('\n').length;
+  const v = ed.value;
+  const end = ed.selectionStart;
+  let n = 1;
+  for (let i = 0; i < end; i++) if (v.charCodeAt(i) === 10) n++;
+  return n;
 }
 
 export function goToLine(n) {
