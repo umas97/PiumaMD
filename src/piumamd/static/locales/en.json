@@ -13,5 +13,6 @@
 "welcome.help":"Guide","st.line":"line","st.autosave":"Autosave","st.saved":"saved","st.unsaved":"unsaved",
 "st.manual":"manual preview (Ctrl+R)","st.plain":"highlighting off",
 "confirm.close":"“%s” has unsaved changes. Close anyway?",
-"confirm.conflict":"The file changed on disk. OK to overwrite, Cancel to reload."
+"confirm.conflict":"The file changed on disk. OK to overwrite, Cancel to reload.","cmd.edit":"Edit",
+"cmd.toggleReading":"Open files for reading"
 }

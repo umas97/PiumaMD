@@ -8,6 +8,7 @@ import * as P from './preview.js';
 const bar = $('#tabs');
 const panes = $('#panes');
 const welcome = $('#welcome');
+const editBtn = $('#btn-edit');
 const MAX = 20;
 export let onSwitch = () => {};
 export const setOnSwitch = (fn) => { onSwitch = fn; };
@@ -25,8 +26,8 @@ export function activate(i) {
   stash();
   S.active = i;
   const cur = S.tabs[i];
+  applyView();   // prima del testo: l'overlay va dipinto sul riquadro giusto
   E.setText(cur.content);
-  E.ed.readOnly = !!cur.readonly;
   E.ed.scrollTop = cur.scroll || 0;
   if (cur.sel) E.ed.setSelectionRange(cur.sel[0], cur.sel[1]);
   paint();
@@ -53,14 +54,39 @@ export async function openPath(path, opts) {
   const at = S.tabs.findIndex((x) => x.path === path);
   if (at >= 0) { activate(at); return S.tabs[at]; }
   const d = await api.read(path);
+  // Un file con del contenuto si apre in lettura; uno vuoto no.
+  const reading = S.cfg.open_reading !== false && d.content.trim() !== '';
   return add({
     path, name: base(path), content: d.content, mtime: d.mtime,
-    dirty: false, scroll: 0, ...(opts || {}),
+    dirty: false, scroll: 0, reading, ...(opts || {}),
   });
 }
 
 export function blank(name, content, opts) {
-  return add({ path: null, name, content: content || '', mtime: null, dirty: false, scroll: 0, ...(opts || {}) });
+  return add({   // documento nuovo: si apre in modifica, non c'e' nulla da leggere
+    path: null, name, content: content || '', mtime: null,
+    dirty: false, scroll: 0, reading: false, ...(opts || {}),
+  });
+}
+
+// Vista della scheda attiva: la lettura vince sulla modalita' configurata,
+// che resta intatta e torna appena si passa alla modifica.
+export function applyView() {
+  const cur = tab();
+  const read = !!(cur && cur.reading);
+  const mode = read ? 'preview' : (S.cfg.view_mode || 'split');
+  panes.className = mode === 'split' ? '' : 'only-' + mode;
+  E.ed.readOnly = read || !!(cur && cur.readonly);   // niente comandi in lettura
+  editBtn.hidden = !read || !!cur.readonly;
+}
+
+export function edit() {
+  const cur = tab();
+  if (!cur || cur.readonly) return;
+  cur.reading = false;
+  applyView();
+  E.refresh(true);   // l'editor era nascosto: l'overlay va ridipinto
+  E.ed.focus();
 }
 
 export function close(i, force) {
@@ -71,6 +97,7 @@ export function close(i, force) {
   if (S.active >= S.tabs.length) S.active = S.tabs.length - 1;
   if (S.active < 0) { E.setText(''); P.clear(); }
   else { const keep = S.active; S.active = -1; activate(keep); }
+  applyView();
   paint();
   onSwitch();
 }
@@ -105,41 +132,5 @@ export function paint() {
   }));
 }
 
-export async function save(silent) {
-  const cur = tab();
-  if (!cur || cur.readonly) return false;
-  stash();
-  if (!cur.path) {
-    const d = await api.dialog('save', cur.name || 'documento.md');
-    if (!d.path) return false;
-    cur.path = d.path;
-    cur.name = base(d.path);
-    cur.mtime = null;
-  }
-  try {
-    const r = await api.write(cur.path, cur.content, cur.mtime);
-    cur.mtime = r.mtime;
-    dirty(false);
-    return true;
-  } catch (err) {
-    if (err.code === 'conflict') return conflict(cur, err);
-    throw err;
-  }
-}
-
-// Conflitto di mtime: l'utente sceglie fra sovrascrivere e ricaricare.
-async function conflict(cur, err) {
-  if (confirm(t('confirm.conflict'))) {
-    const r = await api.write(cur.path, cur.content, err.data.mtime);
-    cur.mtime = r.mtime;
-  } else {
-    const d = await api.read(cur.path);
-    cur.content = d.content;
-    cur.mtime = d.mtime;
-    E.setText(d.content);
-    P.schedule(true);
-  }
-  dirty(false);
-  return true;
-}
+export const save = () => import('./save.js').then((m) => m.save());
 

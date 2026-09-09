@@ -190,3 +190,44 @@ def test_asset_only_serves_known_image_types(state, root):
     with pytest.raises(ApiError) as err:
         files.read_asset(state, str(root / "nota.md"))
     assert err.value.code == "bad_asset"
+
+
+# ---------------------------------------------------------- configurazione
+
+def test_defaults_include_reading_mode():
+    from piumamd import config as config_mod
+
+    assert config_mod.DEFAULTS["open_reading"] is True
+
+
+def test_config_round_trip(tmp_path, monkeypatch):
+    from piumamd import config as config_mod
+
+    monkeypatch.setenv("XDG_CONFIG_HOME", str(tmp_path))
+    assert config_mod.load()["open_reading"] is True
+    config_mod.update({"open_reading": False, "theme": "nord"})
+    fresh = config_mod.load()
+    assert fresh["open_reading"] is False
+    assert fresh["theme"] == "nord"
+    # le altre chiavi restano ai default
+    assert fresh["view_mode"] == "split"
+
+
+def test_unknown_keys_are_not_persisted(tmp_path, monkeypatch):
+    from piumamd import config as config_mod
+
+    monkeypatch.setenv("XDG_CONFIG_HOME", str(tmp_path))
+    saved = config_mod.update({"open_reading": False, "chiave_inventata": 1})
+    assert "chiave_inventata" not in saved
+
+
+def test_corrupt_config_falls_back_without_overwriting(tmp_path, monkeypatch):
+    from piumamd import config as config_mod
+
+    monkeypatch.setenv("XDG_CONFIG_HOME", str(tmp_path))
+    path = config_mod.config_path()
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text("{ non json", encoding="utf-8")
+    assert config_mod.load()["theme"] == "github"
+    # il file originale resta intatto finche' l'utente non salva davvero
+    assert path.read_text(encoding="utf-8") == "{ non json"

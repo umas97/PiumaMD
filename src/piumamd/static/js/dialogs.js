@@ -1,5 +1,5 @@
 // Modali che compaiono solo su richiesta esplicita: ricerca globale ed export.
-import { S, $, tab } from './store.js';
+import { $, tab } from './store.js';
 import { api, get, call } from './api.js';
 import * as I from './i18n.js';
 import * as E from './editor.js';

@@ -1,12 +1,12 @@
 // Comandi non critici all'avvio: viste, temi, lingua, inserimenti, wikilink,
 // ricerca nel documento, guida. Caricato al primo uso da commands.js.
-import { S, $ } from './store.js';
+import { S, $, tab } from './store.js';
 import { api, get, call } from './api.js';
 import * as I from './i18n.js';
 import * as E from './editor.js';
 import * as T from './tabs.js';
 import * as Tree from './tree.js';
-import { setCfg, applyView, status } from './commands.js';
+import { setCfg, status } from './commands.js';
 import { message, welcome as uiWelcome } from './ui.js';
 
 const t = I.t;
@@ -21,6 +21,7 @@ export function marks() {
     else if (c.startsWith('view:')) on = S.cfg.view_mode === c.slice(5);
     else if (c.startsWith('lang:')) on = S.lang === c.slice(5);
     else if (c === 'toggleSync') on = !!S.cfg.sync_scroll;
+    else if (c === 'toggleReading') on = S.cfg.open_reading !== false;
     else if (c === 'toggleAutosave') on = !!S.cfg.autosave;
     if (on !== null) el.setAttribute('aria-checked', on);
   });
@@ -97,7 +98,7 @@ export async function openWiki(name) {
 // ---------- guida ----------
 export async function openHelp() {
   const res = await fetch('help/guida.' + S.lang + '.md');
-  T.blank(t('help.name'), await res.text(), { readonly: true });
+  T.blank(t('help.name'), await res.text(), { readonly: true, reading: true });
 }
 
 // ---------- indice al cursore (sezione 10.4) ----------
@@ -152,6 +153,7 @@ const ACT = {
   },
   toggleSidebar: () => $('#main').classList.toggle('no-sidebar'),
   toggleSync: () => { setCfg({ sync_scroll: !S.cfg.sync_scroll }); marks(); },
+  toggleReading: () => { setCfg({ open_reading: S.cfg.open_reading === false }); marks(); },
   toggleAutosave: () => { setCfg({ autosave: !S.cfg.autosave }); status(); marks(); },
   insertTable: () => E.insert('\n| ' + t('table.col') + ' 1 | ' + t('table.col') + ' 2 |\n| --- | --- |\n|  |  |\n'),
   insertCode: () => E.insert('\n```\n\n```\n'),
@@ -166,7 +168,14 @@ const ACT = {
 };
 
 for (const mode of ['editor', 'preview', 'split']) {
-  ACT['view:' + mode] = () => { setCfg({ view_mode: mode }); applyView(mode); marks(); };
+  // Scegliere una vista dal menu e' una scelta esplicita: esce dalla lettura.
+  ACT['view:' + mode] = () => {
+    setCfg({ view_mode: mode });
+    const cur = tab();
+    if (cur) cur.reading = false;
+    T.applyView();
+    marks();
+  };
 }
 for (const th of ['light', 'dark', 'github', 'dracula', 'nord', 'midnight', 'solarized']) {
   ACT['theme:' + th] = () => {

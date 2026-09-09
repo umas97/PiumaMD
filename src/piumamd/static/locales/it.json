@@ -13,5 +13,6 @@
 "welcome.new":"Nuovo documento","welcome.help":"Guida","st.line":"riga","st.autosave":"Autosalvataggio",
 "st.saved":"salvato","st.unsaved":"non salvato","st.manual":"anteprima manuale (Ctrl+R)",
 "st.plain":"evidenziazione disattivata","confirm.close":"«%s» ha modifiche non salvate. Chiudere comunque?",
-"confirm.conflict":"Il file è cambiato su disco. OK per sovrascriverlo, Annulla per ricaricarlo."
+"confirm.conflict":"Il file è cambiato su disco. OK per sovrascriverlo, Annulla per ricaricarlo.",
+"cmd.edit":"Modifica","cmd.toggleReading":"Apri i file in lettura"
 }

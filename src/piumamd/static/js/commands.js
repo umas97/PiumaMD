@@ -13,13 +13,10 @@ export const setCfg = (patch) => {
   api.setConfig(patch).catch(() => {});
 };
 
-export const applyView = (mode) => {
-  $('#panes').className = mode === 'split' ? '' : 'only-' + mode;
-};
-
 const CMD = {
   new: () => T.blank(t('untitled')),
-  save: () => T.save(false),
+  save: () => T.save(),
+  edit: () => T.edit(),
   closeTab: () => T.close(S.active),
   bold: () => E.wrapSel('**'),
   italic: () => E.wrapSel('*'),
@@ -77,7 +74,7 @@ document.addEventListener('click', (e) => {
 
 const KEYS = {
   s: 'save', n: 'new', w: 'closeTab', f: 'find', b: 'bold', i: 'italic',
-  k: 'link', '/': 'comment', r: 'refresh', p: 'quickOpen',
+  k: 'link', '/': 'comment', r: 'refresh', p: 'quickOpen', e: 'edit',
 };
 
 document.addEventListener('keydown', (e) => {

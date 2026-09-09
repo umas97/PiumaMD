@@ -142,16 +142,36 @@ button, input, select, textarea { font: inherit; color: inherit; }
 
 /* ---------- Tab ---------- */
 
+#tabbar {
+  display: flex;
+  align-items: center;
+  background: var(--bg-alt);
+  border-bottom: 1px solid var(--border);
+}
+
 #tabs {
   display: flex;
   align-items: stretch;
   gap: 2px;
+  flex: 1;
+  min-width: 0;
   padding: 3px 4px 0;
-  background: var(--bg-alt);
-  border-bottom: 1px solid var(--border);
   overflow-x: auto;
   scrollbar-width: thin;
 }
+
+/* Il pulsante compare solo sulle schede aperte in lettura. */
+.btn.edit-btn {
+  flex: none;
+  margin: 2px 6px;
+  padding: 3px 10px;
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--accent-fg);
+  white-space: nowrap;
+}
+
+.btn.edit-btn:hover { background: var(--accent); opacity: .88; }
 
 .tab {
   display: flex;
@@ -184,7 +204,18 @@ button, input, select, textarea { font: inherit; color: inherit; }
 
 #panes.only-editor { grid-template-columns: 1fr 0 0; }
 #panes.only-preview { grid-template-columns: 0 0 1fr; }
-#panes.only-editor > #pane-resizer, #panes.only-preview > #pane-resizer { display: none; }
+/* Colonne assegnate esplicitamente: senza, togliere un riquadro dal flusso
+   farebbe scalare i successivi nella colonna sbagliata. Con l'assegnazione,
+   display:none e' sicuro — ed e' necessario, perche' un riquadro largo zero
+   manderebbe a capo ogni singolo carattere del documento. */
+#panes > .editor-wrap { grid-column: 1; }
+#panes > #pane-resizer { grid-column: 2; }
+#panes > #preview { grid-column: 3; }
+
+#panes.only-preview > .editor-wrap,
+#panes.only-editor > #preview,
+#panes.only-editor > #pane-resizer,
+#panes.only-preview > #pane-resizer { display: none; }
 
 .editor-wrap {
   position: relative;

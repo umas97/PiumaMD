@@ -43,6 +43,7 @@
         <button class="menu-item" data-cmd="save"><span data-i18n="cmd.save">Save</span><span class="key">Ctrl+S</span></button>
         <button class="menu-item" data-cmd="export"><span data-i18n="cmd.export">Export…</span><span class="key"></span></button>
         <div class="menu-sep"></div>
+        <button class="menu-item" data-cmd="edit"><span data-i18n="cmd.edit">Edit</span><span class="key">Ctrl+E</span></button>
         <button class="menu-item" data-cmd="closeTab"><span data-i18n="cmd.closeTab">Close tab</span><span class="key">Ctrl+W</span></button>
       </div>
     </div>
@@ -78,6 +79,7 @@
         <div class="menu-sep"></div>
         <button class="menu-item" data-cmd="toggleSidebar"><span data-i18n="cmd.toggleSidebar">Show sidebar</span><span class="key"></span></button>
         <button class="menu-item" data-cmd="toggleSync"><span data-i18n="cmd.toggleSync">Synchronised scrolling</span><span class="key"></span></button>
+        <button class="menu-item" data-cmd="toggleReading"><span data-i18n="cmd.toggleReading">Open files for reading</span><span class="key"></span></button>
         <button class="menu-item" data-cmd="refresh"><span data-i18n="cmd.refresh">Refresh preview</span><span class="key">Ctrl+R</span></button>
         <div class="menu-sep"></div>
         <button class="menu-item" data-cmd="lang:it"><span data-i18n="lang.it">Italiano</span><span class="key"></span></button>
@@ -115,7 +117,12 @@
     <div class="resizer" id="sb-resizer"></div>
 
     <section id="content">
-      <div id="tabs"></div>
+      <div id="tabbar">
+        <div id="tabs"></div>
+        <button id="btn-edit" class="btn edit-btn" data-cmd="edit" hidden>
+          <span aria-hidden="true">&#9998;</span> <span data-i18n="cmd.edit">Edit</span>
+        </button>
+      </div>
 
       <div id="welcome">
         <h1><svg width="30" height="30"><use href="#i-piuma"/></svg> PiumaMD</h1>

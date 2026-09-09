@@ -62,6 +62,23 @@ indipendente: nessun lock, nessuna IPC.
 Non usa `sudo` e non tocca file di sistema. `Exec` punta all'eseguibile del venv
 con percorso assoluto, così funziona anche senza `piumamd` nel `PATH`.
 
+### Lettura e modifica
+
+Un file che ha già del contenuto si apre in **sola lettura**: l'anteprima
+occupa tutta la finestra e nella barra delle schede compare **✎ Modifica**.
+Il pulsante — o `Ctrl+E`, o `File → Modifica` — passa alla vista configurata in
+`view_mode`, che di solito è affiancata, e mette il cursore nell'editor.
+
+Un documento nuovo e un file vuoto si aprono direttamente in modifica: non c'è
+niente da leggere. La guida `F1` resta in lettura e non è modificabile.
+
+Lo stato è **per scheda**: passare a un'altra scheda e tornare non riporta in
+lettura un documento che stavi modificando. Finché una scheda è in lettura la
+`textarea` è `readOnly`, così nessun comando può sporcarla di nascosto.
+
+Per aprire sempre in modifica: `Visualizza → Apri i file in lettura`, oppure
+`"open_reading": false` in `config.json`.
+
 ### Diagrammi e formule
 
 `static/vendor/` è **vuota nella repo**: mermaid (3,3 MB) e KaTeX (600 KB)
@@ -122,6 +139,7 @@ budget dei 30 KB:
 | `ui.js` | schermata di benvenuto, menu contestuale, dialoghi |
 | `dialogs.js` | ricerca globale, modale di esportazione |
 | `sync.js` | primo evento di scroll |
+| `save.js` | primo salvataggio, manuale o automatico |
 | `tables.js` | cursore dentro una tabella |
 | `wiki.js` | dopo aver digitato `[[` |
 | `resize.js` | primo trascinamento di un divisore |
@@ -147,6 +165,7 @@ non salva.
 | `sidebar_w` | `260` | Larghezza della barra laterale in px |
 | `preview_ratio` | `0.5` | Frazione di larghezza dell'anteprima |
 | `autosave` | `false` | Autosalvataggio 2 s dopo l'ultima modifica |
+| `open_reading` | `true` | Apre i file esistenti in sola lettura |
 | `sync_scroll` | `true` | Scroll sincronizzato bidirezionale |
 | `extensions` | `[".md", ".markdown", ".txt"]` | Estensioni considerate file di testo |
 
@@ -260,14 +279,14 @@ Valori su Ubuntu 24.04, WebKitGTK 4.1, Python 3.12:
 | Metrica | Misurato | Limite | |
 | :--- | ---: | ---: | :--- |
 | Disco: progetto + venv di runtime | 13 MB | 40 MB | ok |
-| RSS del gruppo di processi, a riposo | 419 MB | 180 MB | **sforato** |
-| PSS dello stesso gruppo | 159 MB | — | informativo |
+| RSS del gruppo di processi, a riposo | 415 MB | 180 MB | **sforato** |
+| PSS dello stesso gruppo | 160-195 MB | — | informativo |
 | CPU a riposo, 30 s | 0,17 % | 1 % | ok |
-| CPU digitando 8 car/s su 200 KB | 20,6 % | 8 % | **sforato** |
-| JavaScript servito all'avvio | 30 557 B | 30 720 B | ok |
-| CSS servito all'avvio | 18 740 B | 25 600 B | ok |
-| Dal comando alla finestra utilizzabile | 600 ms | 1500 ms | ok |
-| Apertura di un documento da 1 MB | 144 ms | 300 ms | ok |
+| CPU digitando 8 car/s su 200 KB | 22,2 % | 8 % | **sforato** |
+| JavaScript servito all'avvio | 30 634 B | 30 720 B | ok |
+| CSS servito all'avvio | 19 617 B | 25 600 B | ok |
+| Dal comando alla finestra utilizzabile | 548 ms | 1500 ms | ok |
+| Apertura di un documento da 1 MB | 41 ms | 300 ms | ok |
 | Richieste a `vendor/` su documento semplice | 0 | 0 | ok |
 | Handle JavaScript vivi dopo 5 s di quiete | 0 | 0 | ok |
 | Risposte `404` in tutta la sessione | 0 | 0 | ok |
@@ -279,15 +298,20 @@ porta dietro. Le due restanti del budget non sono state spese.
 
 ### I due budget non raggiunti
 
-**RSS del gruppo di processi: 419 MB contro 180 MB.**
+**RSS del gruppo di processi: 415 MB contro 180 MB.**
 Il gruppo è di tre processi — Python, `WebKitNetworkProcess`,
 `WebKitWebProcess` — e tutti e tre mappano la stessa libreria WebKitGTK.
 Sommare le RSS conta quelle pagine tre volte. La PSS, che le conta una volta
-sola, dà **159 MB**, dentro il limite. Il dettaglio per processo è
-`python 175 MB / 63 MB`, `WebKitNetworkProcess 52 MB / 13 MB`,
-`WebKitWebProcess 203 MB / 88 MB` (RSS / PSS). Non c'è nulla nel codice
+sola, dà **160-195 MB**, cioè attorno al limite. Non c'è niente nel codice
 dell'applicazione che possa ridurre la RSS sommata: è il costo di mappare
 WebKitGTK, lo stesso motore che la specifica stima in 150-300 MB per finestra.
+
+La PSS oscilla di una trentina di MB fra un'esecuzione e l'altra perché è
+definita come le pagine private più quelle condivise **divise per il numero di
+processi che le mappano**: se sul sistema gira un altro programma basato su
+WebKit, la nostra quota scende. È un ordine di grandezza, non una misura
+ripetibile. La RSS invece resta 415-419 MB in ogni configurazione, con il
+documento aperto in lettura o affiancato.
 
 **CPU digitando su un documento da 200 KB: 20,6 % contro 8 %.**
 Non è il render dell'anteprima e non è l'evidenziazione. Una `<textarea>` nuda
@@ -297,7 +321,7 @@ WebKitGTK rifà il layout del testo a ogni carattere inserito. Quello è il
 pavimento, ed è quasi il triplo del budget. L'applicazione completa gira
 appena sotto perché il documento è lo stesso ma l'anteprima è diradata.
 
-Il percorso per arrivarci è stato: 41,3 % all'inizio → 22,6 % dopo tre
+Il percorso per arrivarci è stato: 41,3 % all'inizio → 22 % dopo tre
 correzioni misurate una alla volta. Le tre sono (1) un ritmo dell'anteprima
 proporzionale al costo misurato del render, (2) le tre parti dell'overlay rese
 blocchi distinti invece di span nello stesso flusso inline, dove ogni modifica

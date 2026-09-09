@@ -22,6 +22,7 @@ DEFAULTS: dict[str, Any] = {
     "sidebar_w": 260,
     "preview_ratio": 0.5,
     "autosave": False,
+    "open_reading": True,
     "sync_scroll": True,
     "extensions": [".md", ".markdown", ".txt"],
 }

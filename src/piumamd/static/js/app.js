@@ -35,7 +35,7 @@ function autosave() {
   if (!cur || !cur.path || cur.readonly) return;
   saveTimer = setTimeout(() => {
     T.stash();
-    T.save(true).then(C.status).catch((e) => window.toast(e, true));
+    T.save().then(C.status).catch((e) => window.toast(e, true));
   }, 2000);
 }
 
@@ -101,7 +101,7 @@ async function boot() {
   document.body.style.setProperty('--sidebar-w', (cfg.sidebar_w || 260) + 'px');
   document.body.style.setProperty('--preview-ratio', cfg.preview_ratio ?? 0.5);
   I.applyDom();
-  C.applyView(cfg.view_mode || 'split');
+  T.applyView();
 
   if (cfg.root) {
     try { await Tree.load(); } catch (e) { window.toast(e, true); }

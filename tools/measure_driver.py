@@ -237,6 +237,11 @@ def main() -> int:
           })()
         """)
         time.sleep(2.5)
+        # I file esistenti si aprono in lettura: senza passare alla modifica la
+        # textarea e' readOnly e la digitazione simulata non scriverebbe nulla.
+        js("var b=document.getElementById('btn-edit'); if (!b.hidden) b.click(); 'ok'")
+        time.sleep(1.0)
+        results["typing_ready"] = js("!document.getElementById('ed').readOnly")
         js(
             "window.__typing = setInterval(function () {"
             "  var ta = document.getElementById('ed'); ta.focus();"

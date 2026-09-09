@@ -21,6 +21,7 @@ in a read-only tab.
 | `Ctrl+B` / `Ctrl+I` | Bold / italic on the selection |
 | `Ctrl+K` | Insert a Markdown link |
 | `Ctrl+/` | Toggle line comment |
+| `Ctrl+E` | Switch from reading to editing |
 | `Ctrl+R` | Refresh the preview |
 | `Ctrl+P` | Quick file filter |
 | `F1` | This guide |
@@ -29,6 +30,15 @@ in a read-only tab.
 
 `Ctrl+Z` always works, menu commands included: every edit goes through the
 window's native undo.
+
+## Reading and editing
+
+A file that already has content opens read-only, filling the window. To write in
+it: the **✎ Edit** button in the tab bar, `Ctrl+E`, or `File → Edit`. You get
+back the view you configured under `View`.
+
+New documents and empty files open in editing mode straight away. If you want
+that always, untick `View → Open files for reading`.
 
 ## Supported syntax
 

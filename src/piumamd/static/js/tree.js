@@ -1,5 +1,5 @@
 // Sidebar: albero dei file, filtro client-side, menu contestuale (lazy).
-import { S, $, base } from './store.js';
+import { S, $ } from './store.js';
 import { api } from './api.js';
 import * as T from './tabs.js';
 

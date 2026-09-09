@@ -21,6 +21,7 @@ aperto in una scheda in sola lettura.
 | `Ctrl+B` / `Ctrl+I` | Grassetto / corsivo sulla selezione |
 | `Ctrl+K` | Inserisci un link Markdown |
 | `Ctrl+/` | Commenta o decommenta la riga |
+| `Ctrl+E` | Passa dalla lettura alla modifica |
 | `Ctrl+R` | Aggiorna l'anteprima |
 | `Ctrl+P` | Filtro rapido sui file |
 | `F1` | Questa guida |
@@ -29,6 +30,15 @@ aperto in una scheda in sola lettura.
 
 `Ctrl+Z` funziona sempre, anche dopo i comandi del menu: ogni modifica passa
 dall'annullamento nativo della finestra.
+
+## Lettura e modifica
+
+Un file che ha già del contenuto si apre in sola lettura, a tutta finestra. Per
+scriverci: il pulsante **✎ Modifica** nella barra delle schede, `Ctrl+E`, oppure
+`File → Modifica`. Si torna alla vista che hai configurato in `Visualizza`.
+
+I documenti nuovi e i file vuoti si aprono già in modifica. Se preferisci che
+sia sempre così, togli la spunta a `Visualizza → Apri i file in lettura`.
 
 ## Sintassi supportata
 
