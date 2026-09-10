@@ -157,13 +157,15 @@ def main(argv: list[str] | None = None) -> int:
     )
     state.window = window
 
-    maximized = {"value": bool(geometry.get("maximized"))}
-
-    def on_maximized() -> None:
-        maximized["value"] = True
-
-    def on_restored() -> None:
-        maximized["value"] = False
+    # Geometria di ripiego: se la finestra chiude massimizzata, GTK riporta la
+    # dimensione da massimizzata, non quella di ripristino. In quel caso si
+    # conserva l'ultima geometria nota, che e' proprio quella salvata a monte.
+    fallback = {
+        "w": int(geometry.get("w") or 1000),
+        "h": int(geometry.get("h") or 800),
+        "x": geometry.get("x"),
+        "y": geometry.get("y"),
+    }
 
     def on_shown() -> None:
         if dev:
@@ -171,22 +173,28 @@ def main(argv: list[str] | None = None) -> int:
             print(f"PIUMA_READY {elapsed:.0f}ms", flush=True)
 
     def on_closing() -> None:
+        """Salva la geometria. Gira sul main thread GTK (evento sincrono).
+
+        Qui non si possono usare window.width/x/...: quelle proprieta' fanno
+        idle_add + acquire su un semaforo, e sul main thread la callback idle
+        non verra' mai eseguita -> la chiusura si blocca per sempre. Si legge
+        percio' direttamente dal Gtk.Window, che sul main thread e' sincrono.
+        """
         try:
-            saved = {
-                "w": int(window.width),
-                "h": int(window.height),
-                "x": int(window.x),
-                "y": int(window.y),
-                "maximized": maximized["value"],
-            }
+            native = window.native
+            is_max = bool(native.is_maximized())
+            if is_max:
+                saved = {**fallback, "maximized": True}
+            else:
+                w, h = native.get_size()
+                x, y = native.get_position()
+                saved = {"w": int(w), "h": int(h), "x": int(x), "y": int(y), "maximized": False}
         except Exception:
             return
         current = config_mod.load()
         current["window"] = saved
         config_mod.save(current)
 
-    window.events.maximized += on_maximized
-    window.events.restored += on_restored
     window.events.shown += on_shown
     window.events.closing += on_closing
 

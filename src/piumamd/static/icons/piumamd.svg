@@ -1,8 +1,17 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-     stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
   <title>PiumaMD</title>
-  <path d="M20 3.5c-7.5.4-12.2 3.3-14 8.6-.7 2-.6 4 .2 5.7L18.2 5.8"/>
-  <path d="M6.2 17.8c3.9.9 7.3-.1 9.7-2.9 1.7-2 2.9-4.9 3.6-8.8"/>
-  <path d="M4 21c1.2-1.9 2.6-3.6 4.2-5.2"/>
-  <path d="M9.6 14.4c1.9-.3 3.6-1 5-2.2"/>
+  <!-- Sfondo pieno: nella dash di GNOME e nella favicon non esiste nessun
+       `currentColor` da ereditare e la piuma a solo tratto restava invisibile.
+       Tinta piatta, non gradiente: i renderer piu' spartani (ImageMagick, certi
+       temi di icone) ignorano `url(#...)` e dipingono nero. -->
+  <rect x="0" y="0" width="64" height="64" rx="14" ry="14" fill="#2f6fdb"/>
+  <!-- La piuma originale (viewBox 24) riportata su 64 con un margine di 10. -->
+  <g transform="translate(10 10) scale(1.8333)"
+     fill="none" stroke="#ffffff" stroke-width="1.6"
+     stroke-linecap="round" stroke-linejoin="round">
+    <path d="M20 3.5c-7.5.4-12.2 3.3-14 8.6-.7 2-.6 4 .2 5.7L18.2 5.8"/>
+    <path d="M6.2 17.8c3.9.9 7.3-.1 9.7-2.9 1.7-2 2.9-4.9 3.6-8.8"/>
+    <path d="M4 21c1.2-1.9 2.6-3.6 4.2-5.2"/>
+    <path d="M9.6 14.4c1.9-.3 3.6-1 5-2.2"/>
+  </g>
 </svg>
