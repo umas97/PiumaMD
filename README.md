@@ -10,6 +10,12 @@ standard, un frontend in HTML, CSS e JavaScript vanilla, una finestra
 funzionava ma consumava troppo. Il requisito primario non è la parità di
 funzionalità: è la leggerezza.
 
+La versione precedente resta disponibile come ripiego: il branch
+[`legacy-tauri`](https://github.com/umas97/PiumaMD/tree/legacy-tauri) ne
+conserva la storia completa, e i tag
+[`v1.1.1`](https://github.com/umas97/PiumaMD/releases/tag/v1.1.1),
+`v1.1.0` e `v1.0.0` restano scaricabili. Non è più mantenuta.
+
 ---
 
 ## Prerequisiti

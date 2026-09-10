@@ -8,3 +8,4 @@ dist/
 src/piumamd/static/vendor/*
 !src/piumamd/static/vendor/.gitkeep
 .venv-dev/
+PROMPT_PIUMAMD_LIGHT.md
