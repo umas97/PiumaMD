@@ -1,10 +1,11 @@
-// Modali che compaiono solo su richiesta esplicita: ricerca globale ed export.
-import { $, tab } from './store.js';
+// Modali che compaiono solo su richiesta esplicita: ricerca globale, export,
+// colore di accento.
+import { S, tab } from './store.js';
 import { api, get, call } from './api.js';
 import * as I from './i18n.js';
-import * as E from './editor.js';
 import * as T from './tabs.js';
 import { overlay, head, body, foot } from './ui.js';
+import { goToLine } from './actions.js';
 
 const t = I.t;
 
@@ -52,7 +53,7 @@ export function searchModal() {
         b.addEventListener('click', async () => {
           close();
           await T.openPath(hit.path);
-          E.goToLine(hit.line);
+          goToLine(hit.line);
           import('./sync.js').then((m) => m.scrollToLine(hit.line));
         });
         list.append(b);
@@ -60,6 +61,9 @@ export function searchModal() {
     });
   });
 }
+
+// Etichetta ed estensione proposta nel dialogo di salvataggio.
+const FORMATS = { pdf: ['PDF', 'pdf'], docx: ['DOCX', 'docx'], html: ['HTML', 'html'], latex: ['LaTeX', 'tex'] };
 
 // La modale mostra solo i formati producibili su questa macchina, con accanto
 // il motivo di ogni esclusione. Nessun fallback silenzioso.
@@ -76,11 +80,11 @@ export async function exportModal() {
       p.textContent = t('export.no_pandoc');
       list.append(p);
     } else {
-      for (const fmt of ['pdf', 'docx', 'html']) {
+      for (const fmt of Object.keys(FORMATS)) {
         const b = document.createElement('button');
         b.className = 'hit';
         const n = document.createElement('span');
-        n.textContent = fmt.toUpperCase();
+        n.textContent = FORMATS[fmt][0];
         b.append(n);
         if (info.formats[fmt]) {
           b.addEventListener('click', () => { close(); runExport(cur, fmt).catch((e) => window.toast(e, true)); });
@@ -99,9 +103,68 @@ export async function exportModal() {
 }
 
 async function runExport(cur, fmt) {
-  const d = await api.dialog('save', cur.name.replace(/\.[^.]+$/, '') + '.' + fmt);
+  const d = await api.dialog('save', cur.name.replace(/\.[^.]+$/, '') + '.' + FORMATS[fmt][1]);
   if (!d.path) return;
   window.toast(t('export.running'));
   const r = await call('/api/export/run', { path: cur.path, target: d.path, format: fmt });
   window.toast(t('export.ok').replace('%s', r.path));
+}
+
+// Accento per famiglia di temi: chiari e scuri hanno ciascuno il proprio.
+// Testo sopra l'accento e colore della selezione li ricava il backend: dopo
+// ogni scelta si rilegge /api/config e se ne applicano le variabili.
+const PRESETS = {
+  light: ['#2f6fdb', '#7c4dcc', '#0f8a8a', '#1f8f4e', '#c25e00', '#c62f3b', '#c2387a', '#4b5563'],
+  dark: ['#5a9bff', '#b48cff', '#3cc7c7', '#4cc38a', '#f0a050', '#f06a6a', '#f27ab5', '#9aa4b2'],
+};
+
+async function setAccent(fam, color) {
+  const accent = { ...S.cfg.accent, [fam]: color };
+  await api.setConfig({ accent });
+  S.cfg.accent = accent;
+  const v = (await api.config()).accent_vars;
+  for (const k in v) document.documentElement.style.setProperty(k, v[k]);
+}
+
+export function accentModal() {
+  overlay((panel, close) => {
+    head(panel, t('accent.title'));
+    const list = body(panel);
+    for (const fam of ['light', 'dark']) {
+      const box = document.createElement('div');
+      box.className = 'accent-fam';
+      const h = document.createElement('strong');
+      h.textContent = t('accent.' + fam);
+      const row = document.createElement('div');
+      row.className = 'swatches';
+      const pick = document.createElement('input');
+      pick.type = 'color';
+      pick.title = t('accent.custom');
+      const reset = document.createElement('button');
+      reset.className = 'btn';
+      reset.textContent = t('accent.reset');
+      const mark = () => {
+        const v = (S.cfg.accent || {})[fam] || null;
+        row.querySelectorAll('.swatch').forEach((b) => b.setAttribute('aria-pressed', b.dataset.c === v));
+        pick.value = v || PRESETS[fam][0];
+      };
+      const choose = (c) => setAccent(fam, c).then(mark).catch((e) => window.toast(e, true));
+      for (const c of PRESETS[fam]) {
+        const b = document.createElement('button');
+        b.className = 'swatch';
+        b.dataset.c = c;
+        b.title = c;
+        b.style.background = c;
+        b.addEventListener('click', () => choose(c));
+        row.append(b);
+      }
+      pick.addEventListener('change', () => choose(pick.value));
+      reset.addEventListener('click', () => choose(null));
+      row.append(pick, reset);
+      box.append(h, row);
+      list.append(box);
+      mark();
+    }
+    foot(panel, [[t('dlg.ok'), 'primary', close]]);
+  });
 }

@@ -27,7 +27,8 @@ compilarli nel venv aggiungerebbe decine di MB e una toolchain.
 sudo apt install python3-gi python3-gi-cairo gir1.2-webkit2-4.1   # o -4.0 su distro più vecchie
 ```
 
-Opzionali, per l'esportazione: `pandoc` e, per il PDF, uno fra `tectonic`,
+Opzionali, per l'esportazione: `pandoc` (basta da solo per DOCX, HTML e
+LaTeX) e, per il PDF, uno fra `tectonic`,
 `texlive-xetex`, `texlive-latex-base`, `weasyprint`, `wkhtmltopdf`.
 
 ## Installazione
@@ -125,9 +126,10 @@ src/piumamd/
   render.py    Markdown → HTML sanitizzato (mistune 3 + plugin propri)
   highlight.py evidenziatore di codice a regex, 12 linguaggi
   export.py    Pandoc di sistema
+  watch.py     inotify via ctypes: avvisa quando l'albero cambia su disco
   config.py    ~/.config/piumamd/config.json
   static/      index.html, css/, js/, icons/, locales/, help/, vendor/
-tests/         render, files, export, sicurezza
+tests/         render, files, export, sicurezza, watch
 ```
 
 ### JavaScript: cosa si carica e quando
@@ -143,7 +145,7 @@ budget dei 30 KB:
 | :--- | :--- |
 | `actions.js` | primo comando che non sia salva, nuovo, chiudi, grassetto, corsivo, aggiorna, filtro |
 | `ui.js` | schermata di benvenuto, menu contestuale, dialoghi |
-| `dialogs.js` | ricerca globale, modale di esportazione |
+| `dialogs.js` | ricerca globale, modale di esportazione, colore di accento |
 | `sync.js` | primo evento di scroll |
 | `save.js` | primo salvataggio, manuale o automatico |
 | `tables.js` | cursore dentro una tabella |
@@ -166,6 +168,7 @@ non salva.
 | `last_root` | `null` | Ultima cartella aperta |
 | `recent` | `[]` | Ultimi 10 percorsi, per la schermata di benvenuto |
 | `theme` | `"github"` | `light` `dark` `github` `dracula` `nord` `midnight` `solarized` |
+| `accent` | `{"light":null,"dark":null}` | Accento `#rrggbb` per i temi chiari (`light` `github` `solarized`) e per quelli scuri; `null` = colore del tema |
 | `lang` | `null` | `it`, `en`, o `null` = deduci da `LANG` con ripiego sull'inglese |
 | `view_mode` | `"split"` | `editor` \| `preview` \| `split` |
 | `sidebar_w` | `260` | Larghezza della barra laterale in px |
@@ -185,20 +188,21 @@ codice.
 ## API
 
 Tutte le risposte sono JSON. Tutte le rotte `/api/*` richiedono l'header
-`X-Piuma-Token`; senza, il server risponde `403` senza corpo. Unica eccezione
-`/api/asset`, che accetta il token anche come parametro `t` in query, perché un
-elemento `<img>` non può inviare header.
+`X-Piuma-Token`; senza, il server risponde `403` senza corpo. Il token è
+accettato anche come parametro `t` in query, perché né un elemento `<img>`
+(`/api/asset`) né un `EventSource` (`/api/events`) possono inviare header.
 
 | Metodo | Percorso | Note |
 | :--- | :--- | :--- |
 | `GET` | `/api/tree` | `root` opzionale; cartelle prima, alfabetico; profondità max 12 |
+| `GET` | `/api/events` | Server-sent events: `data: tree` quando l'albero cambia su disco; `204` senza inotify |
 | `GET` | `/api/file` | `{"content","mtime","size"}` |
 | `POST` | `/api/file` | Scrittura atomica; `409` se l'`mtime` non combacia |
 | `POST` | `/api/render` | `{"html","toc","needs"}`; cache in memoria di 8 voci |
 | `GET` | `/api/search` | Max 100 risultati, salta i file oltre 1 MB |
 | `POST` | `/api/fs/create` `/api/fs/rename` `/api/fs/delete` | Cestino XDG quando possibile |
 | `GET` | `/api/export/check` | `{"pandoc","version","pdf_engine","pdf_engine_packages","formats"}` |
-| `POST` | `/api/export/run` | `pdf` \| `docx` \| `html`; timeout 120 s |
+| `POST` | `/api/export/run` | `pdf` \| `docx` \| `html` \| `latex`; timeout 120 s |
 | `GET` `POST` | `/api/config` | Lettura e merge |
 | `GET` | `/api/asset` | Solo immagini dentro la radice aperta |
 | `GET` | `/api/wiki` | Risoluzione e autocompletamento dei wikilink |
@@ -263,8 +267,8 @@ python3 -m venv --system-site-packages .venv-dev
 .venv-dev/bin/python -m pytest
 ```
 
-81 test: pipeline Markdown, I/O e contenimento dei percorsi, esportazione,
-sicurezza. Uno di essi verifica che nel markup non ci siano stringhe visibili
+99 test: pipeline Markdown, I/O e contenimento dei percorsi, esportazione,
+sicurezza, aggiornamento dell'albero e colore di accento. Uno di essi verifica che nel markup non ci siano stringhe visibili
 scritte a mano senza `data-i18n`.
 
 ---
@@ -289,8 +293,8 @@ Valori su Ubuntu 24.04, WebKitGTK 4.1, Python 3.12:
 | PSS dello stesso gruppo | 160-195 MB | — | informativo |
 | CPU a riposo, 30 s | 0,17 % | 1 % | ok |
 | CPU digitando 8 car/s su 200 KB | 22,2 % | 8 % | **sforato** |
-| JavaScript servito all'avvio | 30 634 B | 30 720 B | ok |
-| CSS servito all'avvio | 19 617 B | 25 600 B | ok |
+| JavaScript servito all'avvio | 30 681 B | 30 720 B | ok |
+| CSS servito all'avvio | 21 404 B | 25 600 B | ok |
 | Dal comando alla finestra utilizzabile | 548 ms | 1500 ms | ok |
 | Apertura di un documento da 1 MB | 41 ms | 300 ms | ok |
 | Richieste a `vendor/` su documento semplice | 0 | 0 | ok |

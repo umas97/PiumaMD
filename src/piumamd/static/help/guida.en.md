@@ -1,6 +1,6 @@
 ---
 title: PiumaMD guide
-version: 0.1.0
+version: 1.1.2
 ---
 
 # PiumaMD guide
@@ -75,20 +75,37 @@ the diagram or the formula.
 ## Export
 
 `File → Export` uses the **system Pandoc**, which is not bundled. Formats: PDF,
-DOCX, HTML.
+DOCX, HTML, LaTeX.
 
-- HTML and DOCX need only `pandoc`.
+- HTML, DOCX and LaTeX need only `pandoc`.
 - PDF also needs one engine among `tectonic`, `xelatex`, `pdflatex`,
   `weasyprint`, `wkhtmltopdf`. When none is present the entry is disabled and
   the dialog names the package to install.
 
+PDFs come out on A4 with 2.5 cm margins on every side, like a Word document.
+The `.tex` file carries the same page setup, so compiling it by hand gives the
+same result.
+
 The destination is always chosen through the native dialog: PiumaMD never
 writes next to the source without asking.
+
+## Sidebar and appearance
+
+The top of the sidebar shows the name of the open folder; hover it for the full
+path. Folders that contain the active file have a coloured icon, even when they
+are collapsed.
+
+The tree refreshes by itself when files or folders are created, deleted,
+renamed or moved, including by other programs.
+
+`View → Accent colour…` picks the accent separately for light and dark themes:
+one of the suggested colours or a custom one. `Default` goes back to the
+theme's own colour.
 
 ## Where the configuration lives
 
 `~/.config/piumamd/config.json`. It holds window geometry, last open folder,
-recents, theme, language, view mode, panel widths, autosave, synchronised
+recents, theme, accent colour, language, view mode, panel widths, autosave, synchronised
 scrolling and the extensions treated as text files.
 
 `extensions` (by default `.md`, `.markdown`, `.txt`) is the single definition of

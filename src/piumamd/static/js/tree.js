@@ -1,12 +1,14 @@
 // Sidebar: albero dei file, filtro client-side, menu contestuale (lazy).
 import { S, $ } from './store.js';
-import { api } from './api.js';
+import { api, TOKEN } from './api.js';
 import * as T from './tabs.js';
 
 const box = $('#tree');
 const filter = $('#tree-filter');
+const head = $('#tree-root');
 const open = new Set();
 let flat = [];
+let es = null;
 
 export async function load(root) {
   const d = await api.tree(root);
@@ -15,6 +17,13 @@ export async function load(root) {
   S.names = new Set();
   flat = [];
   walk(d.tree, 0, d.root);
+  head.title = d.root;
+  head.lastChild.textContent = d.tree.name;
+  // Il backend avvisa quando l'albero cambia su disco: si ricarica e basta.
+  if (!es) {
+    es = new EventSource('/api/events?t=' + TOKEN);
+    es.onmessage = () => load().catch(() => {});
+  }
   paint();
 }
 
@@ -60,11 +69,12 @@ TPL.innerHTML = '<div class="node"><span class="twisty"></span>' +
   '<svg width="14" height="14"><use/></svg><span class="label"></span></div>';
 
 export function paint() {
-  const active = S.tabs[S.active];
+  const cur = (S.tabs[S.active] || {}).path || '';
   box.replaceChildren(...visible().map((it) => {
     const el = TPL.content.firstChild.cloneNode(true);
     const dir = it.node.kind === 'dir';
-    el.className = 'node ' + it.node.kind + (active && active.path === it.node.path ? ' active' : '');
+    el.className = 'node ' + it.node.kind +
+      (cur === it.node.path ? ' active' : cur.startsWith(it.node.path + '/') ? ' cur' : '');
     el.style.setProperty('--depth', it.depth);
     el.dataset.path = it.node.path;
     el.dataset.kind = it.node.kind;

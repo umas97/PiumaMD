@@ -220,15 +220,5 @@ export function caretLine() {
   return n;
 }
 
-export function goToLine(n) {
-  const parts = ed.value.split('\n');
-  const pos = parts.slice(0, Math.max(0, n - 1)).reduce((s, l) => s + l.length + 1, 0);
-  ed.focus();
-  ed.setSelectionRange(pos, Math.min(pos + (parts[n - 1] || '').length, ed.value.length));
-  ed.scrollTop = Math.max(0, ((n - 1) / parts.length) * ed.scrollHeight - ed.clientHeight / 2);
-  pre.style.transform = 'translateY(' + -ed.scrollTop + 'px)';
-  schedule();
-}
-
 export const isPlain = () => plain;
 export { pre };

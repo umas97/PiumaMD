@@ -21,7 +21,7 @@ def test_check_has_a_stable_shape():
         "pandoc", "version", "pdf_engine", "pdf_engine_packages", "formats"
     }
     assert isinstance(info["pandoc"], bool)
-    assert set(info["formats"]) == {"pdf", "docx", "html"}
+    assert set(info["formats"]) == {"pdf", "docx", "html", "latex"}
     # epub e' escluso di proposito
     assert "epub" not in info["formats"]
 
@@ -39,6 +39,23 @@ def test_check_reports_the_first_engine_in_the_documented_order():
 def test_engine_packages_are_named_not_generic():
     info = export.check(refresh=True)
     assert "texlive-xetex" in info["pdf_engine_packages"]
+
+
+def test_latex_engines_get_a4_with_word_like_margins():
+    for engine in export.LATEX_ENGINES:
+        args = export.page_args(engine)
+        assert "papersize=a4" in args
+        assert "geometry=margin=2.5cm" in args
+
+
+def test_html_engines_get_a4_margins_without_double_body_padding():
+    for engine in ("weasyprint", "wkhtmltopdf"):
+        args = export.page_args(engine)
+        assert "papersize=A4" in args
+        assert "margin-top=2.5cm" in args
+        style = next(a for a in args if a.startswith("header-includes="))
+        assert "@page { size: A4; margin: 2.5cm }" in style
+        assert "padding: 0" in style
 
 
 def test_unknown_format_is_refused(tmp_path):
@@ -101,3 +118,16 @@ def test_pandoc_errors_surface_as_a_code_not_a_crash(tmp_path):
         export.run(missing, str(tmp_path / "a.html"), "html")
     assert err.value.code == "export_failed"
     assert len(err.value.message) <= export.STDERR_LIMIT
+
+
+@pandoc_only
+def test_latex_export_is_a_standalone_tex_with_the_pdf_page(tmp_path):
+    source = tmp_path / "a.md"
+    source.write_text("# Titolo\n\nTesto.\n", encoding="utf-8")
+    result = export.run(source, str(tmp_path / "uscita.latex"), "latex")
+    assert result["path"].endswith(".tex")
+    tex = Path(result["path"]).read_text(encoding="utf-8")
+    assert "\\documentclass" in tex
+    assert "\\begin{document}" in tex
+    assert "a4paper" in tex
+    assert "margin=2.5cm" in tex

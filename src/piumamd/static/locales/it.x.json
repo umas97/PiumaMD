@@ -31,5 +31,7 @@
 "err.not_a_file":"Non è un file","err.open_failed":"Apertura non riuscita",
 "err.no_opener":"xdg-open non è disponibile","err.bad_path":"Percorso non valido",
 "err.bad_format":"Formato di esportazione non supportato","err.bad_kind":"Tipo di elemento non valido",
-"err.no_window":"La finestra non è pronta"
+"err.no_window":"La finestra non è pronta",
+"accent.title":"Colore di accento","accent.light":"Temi chiari","accent.dark":"Temi scuri",
+"accent.reset":"Predefinito","accent.custom":"Personalizzato"
 }

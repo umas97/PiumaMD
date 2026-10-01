@@ -25,11 +25,19 @@ ENGINE_PACKAGES = {
     "wkhtmltopdf": "wkhtmltopdf",
 }
 
+LATEX_ENGINES = ("tectonic", "xelatex", "pdflatex")
+
 FORMATS = {
     "pdf": {"ext": ".pdf"},
     "docx": {"ext": ".docx"},
     "html": {"ext": ".html"},
+    "latex": {"ext": ".tex"},
 }
+
+# Pagina A4 con margini da documento Word (2,5 cm per lato) invece dei
+# margini larghi di LaTeX e dei 50px del template HTML di Pandoc.
+PAPER = "a4"
+MARGIN = "2.5cm"
 
 TIMEOUT = 120
 STDERR_LIMIT = 2048
@@ -68,9 +76,26 @@ def check(refresh: bool = False) -> dict[str, Any]:
             "pdf": bool(pandoc) and engine is not None,
             "docx": bool(pandoc),
             "html": bool(pandoc),
+            "latex": bool(pandoc),
         },
     }
     return _cache
+
+
+def page_args(engine: str) -> list[str]:
+    """Formato e margini della pagina, nel dialetto di ogni motore."""
+    if engine in LATEX_ENGINES:
+        return ["-V", f"papersize={PAPER}", "-V", f"geometry=margin={MARGIN}"]
+    # Motori HTML: weasyprint legge @page, wkhtmltopdf riceve da Pandoc i
+    # margin-* come opzioni. Il padding del body va azzerato, altrimenti i
+    # margini si sommano.
+    margins = [arg for side in ("top", "right", "bottom", "left")
+               for arg in ("-V", f"margin-{side}={MARGIN}")]
+    style = (
+        f"<style>@page {{ size: A4; margin: {MARGIN} }} "
+        "body { max-width: none; padding: 0 }</style>"
+    )
+    return ["-V", "papersize=A4", *margins, "-V", f"header-includes={style}"]
 
 
 def _validate_target(raw: str, fmt: str) -> Path:
@@ -114,6 +139,10 @@ def run(source: Path, target_raw: str, fmt: str) -> dict[str, Any]:
         cmd.append("--embed-resources")
     elif fmt == "pdf":
         cmd.append(f"--pdf-engine={info['pdf_engine']}")
+        cmd += page_args(info["pdf_engine"])
+    elif fmt == "latex":
+        # il .tex compilato a mano deve dare la stessa pagina del PDF
+        cmd += page_args("pdflatex")
 
     try:
         proc = subprocess.run(cmd, capture_output=True, text=True, timeout=TIMEOUT)

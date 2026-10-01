@@ -27,5 +27,7 @@
 "err.delete_failed":"Could not delete","err.rename_failed":"Could not rename","err.not_a_file":"Not a file",
 "err.open_failed":"Could not open","err.no_opener":"xdg-open is not available","err.bad_path":"Invalid path",
 "err.bad_format":"Unsupported export format","err.bad_kind":"Invalid entry kind",
-"err.no_window":"The window is not ready"
+"err.no_window":"The window is not ready",
+"accent.title":"Accent colour","accent.light":"Light themes","accent.dark":"Dark themes",
+"accent.reset":"Default","accent.custom":"Custom"
 }

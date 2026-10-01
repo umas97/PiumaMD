@@ -33,6 +33,17 @@ export function marks() {
 let hits = [];
 let at = -1;
 
+// Serve solo alle due ricerche, che arrivano pigre: per questo non sta in
+// editor.js. Lo scroll della textarea riallinea da se' l'overlay.
+export function goToLine(n) {
+  const ed = E.ed;
+  const parts = ed.value.split('\n');
+  const pos = parts.slice(0, Math.max(0, n - 1)).reduce((s, l) => s + l.length + 1, 0);
+  ed.focus();
+  ed.setSelectionRange(pos, Math.min(pos + (parts[n - 1] || '').length, ed.value.length));
+  ed.scrollTop = Math.max(0, ((n - 1) / parts.length) * ed.scrollHeight - ed.clientHeight / 2);
+}
+
 function findUpdate() {
   const input = $('#find-input');
   const q = input.value;
@@ -53,7 +64,7 @@ function findStep(dir) {
   at = (at + dir + hits.length) % hits.length;
   const pos = hits[at];
   const len = $('#find-input').value.length;
-  E.goToLine(E.ed.value.slice(0, pos).split('\n').length);
+  goToLine(E.ed.value.slice(0, pos).split('\n').length);
   E.ed.setSelectionRange(pos, pos + len);
   $('#find-count').textContent = (at + 1) + '/' + hits.length;
 }
@@ -133,6 +144,7 @@ const ACT = {
     if (d.path) { await Tree.load(d.path); $('#main').classList.remove('no-sidebar'); }
   },
   export: lazy('./dialogs.js', 'exportModal'),
+  accent: lazy('./dialogs.js', 'accentModal'),
   searchAll: lazy('./dialogs.js', 'searchModal'),
   find: findBar,
   help: openHelp,

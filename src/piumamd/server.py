@@ -56,6 +56,7 @@ class AppState:
         self.token = secrets.token_urlsafe(32)
         self.port = 0
         self.window: Any = None  # popolato da cli.py dopo create_window
+        self.watcher: Any = None  # TreeWatcher, creato al primo albero servito
         self.render_cache: "OrderedCache" = OrderedCache(8)
         self.lock = threading.Lock()
 

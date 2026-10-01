@@ -1,6 +1,6 @@
 ---
 titolo: Guida di PiumaMD
-versione: 0.1.0
+versione: 1.1.2
 ---
 
 # Guida di PiumaMD
@@ -75,20 +75,37 @@ formula compare il blocco sorgente.
 ## Esportazione
 
 `File → Esporta` usa il **Pandoc di sistema**, che non è incluso
-nell'installazione. Formati: PDF, DOCX, HTML.
+nell'installazione. Formati: PDF, DOCX, HTML, LaTeX.
 
-- HTML e DOCX richiedono solo `pandoc`.
+- HTML, DOCX e LaTeX richiedono solo `pandoc`.
 - Il PDF richiede anche un motore fra `tectonic`, `xelatex`, `pdflatex`,
   `weasyprint`, `wkhtmltopdf`. Se manca, la voce è disabilitata e la modale
   dice quale pacchetto installare.
 
+Il PDF esce in formato A4 con margini di 2,5 cm per lato, come un documento
+Word. Il `.tex` porta la stessa impostazione di pagina, così compilarlo a mano
+dà lo stesso risultato.
+
 Il percorso di destinazione si sceglie sempre con il dialogo nativo: PiumaMD
 non scrive mai accanto al sorgente senza chiedere.
+
+## Barra laterale e aspetto
+
+In cima alla barra laterale c'è il nome della cartella aperta; il percorso
+completo compare passandoci sopra. Le cartelle che contengono il file attivo
+hanno l'icona colorata, anche quando sono chiuse.
+
+L'albero si aggiorna da solo quando file o cartelle vengono creati, eliminati,
+rinominati o spostati, anche da altri programmi.
+
+`Visualizza → Colore di accento…` sceglie l'accento separatamente per i temi
+chiari e per quelli scuri: uno dei colori proposti o uno personalizzato.
+`Predefinito` torna al colore del tema.
 
 ## Dove sta la configurazione
 
 `~/.config/piumamd/config.json`. Contiene geometria della finestra, ultima
-cartella aperta, recenti, tema, lingua, modalità di visualizzazione, larghezze
+cartella aperta, recenti, tema, colore di accento, lingua, modalità di visualizzazione, larghezze
 dei pannelli, autosalvataggio, scroll sincronizzato ed estensioni considerate
 file di testo.
 

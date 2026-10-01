@@ -76,6 +76,7 @@
         <button class="menu-item" data-cmd="theme:nord"><span>Nord</span><span class="key"></span></button>
         <button class="menu-item" data-cmd="theme:midnight"><span>Midnight</span><span class="key"></span></button>
         <button class="menu-item" data-cmd="theme:solarized"><span>Solarized</span><span class="key"></span></button>
+        <button class="menu-item" data-cmd="accent"><span data-i18n="cmd.accent">Accent colour…</span><span class="key"></span></button>
         <div class="menu-sep"></div>
         <button class="menu-item" data-cmd="toggleSidebar"><span data-i18n="cmd.toggleSidebar">Show sidebar</span><span class="key"></span></button>
         <button class="menu-item" data-cmd="toggleSync"><span data-i18n="cmd.toggleSync">Synchronised scrolling</span><span class="key"></span></button>
@@ -110,6 +111,7 @@
   <div id="main">
     <aside id="sidebar">
       <div class="sb-head">
+        <div id="tree-root"><svg width="14" height="14"><use href="#i-dir"/></svg><span></span></div>
         <input id="tree-filter" type="text" data-i18n-ph="tree.filter" placeholder="Filter files…" spellcheck="false">
       </div>
       <div id="tree"></div>

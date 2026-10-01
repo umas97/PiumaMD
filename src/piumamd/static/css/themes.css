@@ -1,5 +1,8 @@
 /* Sette temi, solo variabili CSS. Cambiare tema = cambiare un attributo sulla
-   radice: nessun JavaScript oltre a quella riga, nessun ricalcolo. */
+   radice: nessun JavaScript oltre a quella riga, nessun ricalcolo.
+   L'accento scelto dall'utente arriva come --ac-light / --ac-dark (con -fg e
+   -sel) sullo style della radice; i temi chiari leggono il primo, gli scuri il
+   secondo, e senza scelta resta il colore del tema. */
 
 :root,
 [data-theme="light"] {
@@ -9,9 +12,9 @@
   --fg: #1c1f24;
   --fg-dim: #5c6470;
   --border: #d8dce2;
-  --accent: #2f6fdb;
-  --accent-fg: #ffffff;
-  --sel: #cfe0fb;
+  --accent: var(--ac-light, #2f6fdb);
+  --accent-fg: var(--ac-light-fg, #ffffff);
+  --sel: var(--ac-light-sel, #cfe0fb);
   --danger: #c02f2f;
   --ok: #1f8f4e;
   --warn: #b06a00;
@@ -25,7 +28,7 @@
   --md-head: #1a4f9c;
   --md-mark: #8a8f98;
   --md-code: #a1500c;
-  --md-link: #2f6fdb;
+  --md-link: var(--ac-light, #2f6fdb);
   --md-quote: #5c6470;
 }
 
@@ -36,9 +39,9 @@
   --fg: #dde1e7;
   --fg-dim: #8b939f;
   --border: #2e333b;
-  --accent: #5a9bff;
-  --accent-fg: #10131a;
-  --sel: #2b3f60;
+  --accent: var(--ac-dark, #5a9bff);
+  --accent-fg: var(--ac-dark-fg, #10131a);
+  --sel: var(--ac-dark-sel, #2b3f60);
   --danger: #e05a5a;
   --ok: #47c07c;
   --warn: #d99b3a;
@@ -52,7 +55,7 @@
   --md-head: #7fb0ff;
   --md-mark: #6b7280;
   --md-code: #e0a15e;
-  --md-link: #5a9bff;
+  --md-link: var(--ac-dark, #5a9bff);
   --md-quote: #8b939f;
 }
 
@@ -63,9 +66,9 @@
   --fg: #1f2328;
   --fg-dim: #656d76;
   --border: #d1d9e0;
-  --accent: #0969da;
-  --accent-fg: #ffffff;
-  --sel: #ddf4ff;
+  --accent: var(--ac-light, #0969da);
+  --accent-fg: var(--ac-light-fg, #ffffff);
+  --sel: var(--ac-light-sel, #ddf4ff);
   --danger: #cf222e;
   --ok: #1a7f37;
   --warn: #9a6700;
@@ -79,7 +82,7 @@
   --md-head: #0550ae;
   --md-mark: #8c959f;
   --md-code: #953800;
-  --md-link: #0969da;
+  --md-link: var(--ac-light, #0969da);
   --md-quote: #656d76;
 }
 
@@ -90,9 +93,9 @@
   --fg: #f8f8f2;
   --fg-dim: #9aa0b3;
   --border: #44475a;
-  --accent: #bd93f9;
-  --accent-fg: #21222c;
-  --sel: #44475a;
+  --accent: var(--ac-dark, #bd93f9);
+  --accent-fg: var(--ac-dark-fg, #21222c);
+  --sel: var(--ac-dark-sel, #44475a);
   --danger: #ff5555;
   --ok: #50fa7b;
   --warn: #ffb86c;
@@ -106,7 +109,7 @@
   --md-head: #8be9fd;
   --md-mark: #6272a4;
   --md-code: #ffb86c;
-  --md-link: #bd93f9;
+  --md-link: var(--ac-dark, #bd93f9);
   --md-quote: #6272a4;
 }
 
@@ -117,9 +120,9 @@
   --fg: #eceff4;
   --fg-dim: #a4adbd;
   --border: #434c5e;
-  --accent: #88c0d0;
-  --accent-fg: #2e3440;
-  --sel: #434c5e;
+  --accent: var(--ac-dark, #88c0d0);
+  --accent-fg: var(--ac-dark-fg, #2e3440);
+  --sel: var(--ac-dark-sel, #434c5e);
   --danger: #bf616a;
   --ok: #a3be8c;
   --warn: #ebcb8b;
@@ -133,7 +136,7 @@
   --md-head: #88c0d0;
   --md-mark: #6c7a94;
   --md-code: #ebcb8b;
-  --md-link: #81a1c1;
+  --md-link: var(--ac-dark, #81a1c1);
   --md-quote: #a4adbd;
 }
 
@@ -144,9 +147,9 @@
   --fg: #c9d1d9;
   --fg-dim: #7d8590;
   --border: #21262d;
-  --accent: #388bfd;
-  --accent-fg: #0d1117;
-  --sel: #1f3350;
+  --accent: var(--ac-dark, #388bfd);
+  --accent-fg: var(--ac-dark-fg, #0d1117);
+  --sel: var(--ac-dark-sel, #1f3350);
   --danger: #f85149;
   --ok: #3fb950;
   --warn: #d29922;
@@ -160,7 +163,7 @@
   --md-head: #79c0ff;
   --md-mark: #6e7681;
   --md-code: #ffa657;
-  --md-link: #388bfd;
+  --md-link: var(--ac-dark, #388bfd);
   --md-quote: #7d8590;
 }
 
@@ -171,9 +174,9 @@
   --fg: #073642;
   --fg-dim: #657b83;
   --border: #ddd6c1;
-  --accent: #268bd2;
-  --accent-fg: #fdf6e3;
-  --sel: #d7e6ef;
+  --accent: var(--ac-light, #268bd2);
+  --accent-fg: var(--ac-light-fg, #fdf6e3);
+  --sel: var(--ac-light-sel, #d7e6ef);
   --danger: #dc322f;
   --ok: #859900;
   --warn: #b58900;
@@ -187,6 +190,6 @@
   --md-head: #268bd2;
   --md-mark: #93a1a1;
   --md-code: #cb4b16;
-  --md-link: #268bd2;
+  --md-link: var(--ac-light, #268bd2);
   --md-quote: #657b83;
 }

@@ -96,8 +96,10 @@ async function boot() {
   S.lang = cfg.lang || (navigator.language || 'en').slice(0, 2);
   if (S.lang !== 'it') S.lang = 'en';
   await I.load(S.lang);
-  document.documentElement.lang = S.lang;
-  document.documentElement.dataset.theme = cfg.theme || 'github';
+  const html = document.documentElement;
+  html.lang = S.lang;
+  html.dataset.theme = cfg.theme || 'github';
+  for (const k in cfg.accent_vars) html.style.setProperty(k, cfg.accent_vars[k]);
   document.body.style.setProperty('--sidebar-w', (cfg.sidebar_w || 260) + 'px');
   document.body.style.setProperty('--preview-ratio', cfg.preview_ratio ?? 0.5);
   I.applyDom();

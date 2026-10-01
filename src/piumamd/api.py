@@ -12,7 +12,10 @@ from . import config as config_mod
 from . import export as export_mod
 from . import files
 from . import render as render_mod
+from . import watch as watch_mod
 from .server import ApiError
+
+HEARTBEAT = 120  # s: solo per accorgersi di un client sparito
 
 VENDOR_FILES = {
     "mermaid": "mermaid.min.js",
@@ -31,6 +34,13 @@ def _vendor_status(handler: Any) -> dict[str, bool]:
         name: (STATIC_DIR / "vendor" / filename).is_file()
         for name, filename in VENDOR_FILES.items()
     }
+
+
+def _watcher(state: Any) -> Any:
+    with state.lock:
+        if state.watcher is None:
+            state.watcher = watch_mod.TreeWatcher(state)
+    return state.watcher
 
 
 def _set_root(state: Any, path: Path) -> None:
@@ -55,7 +65,45 @@ def get_tree(handler: Any, params: dict[str, Any]) -> Any:
             raise ApiError("not_a_dir", "Not a directory", 400)
         _set_root(state, candidate)
     root = files.require_root(state)
-    return {"root": str(root), "tree": files.build_tree(state, root)}
+    tree = files.build_tree(state, root)
+    # chi riceve questo albero e' gia' aggiornato: il watcher non lo risveglia
+    _watcher(state).sync(tree)
+    return {"root": str(root), "tree": tree}
+
+
+def get_events(handler: Any, params: dict[str, Any]) -> Any:
+    """Server-sent events: un evento `tree` per ogni cambiamento dell'albero.
+
+    La connessione resta aperta e il thread che la serve dorme sulla condition
+    del watcher: nessun ciclo, nessun polling. Il commento periodico serve solo
+    a scoprire un client sparito e a liberare il thread. `id:` fa si' che
+    EventSource, riconnettendosi, dichiari l'ultimo evento visto: se nel
+    frattempo l'albero e' cambiato, la notifica parte subito.
+    """
+    watcher = _watcher(_state(handler))
+    if not watcher.available:
+        handler._send(204, b"", "text/plain; charset=utf-8")  # 204: niente riconnessioni
+        return None
+    handler.close_connection = True
+    handler.send_response(200)
+    handler.send_header("Content-Type", "text/event-stream")
+    handler.send_header("Cache-Control", "no-store")
+    handler.send_header("Connection", "close")
+    handler.send_header("X-Content-Type-Options", "nosniff")
+    handler.end_headers()
+    if handler.command == "HEAD":
+        return None
+    last = handler.headers.get("Last-Event-ID", "")
+    seq = int(last) if last.isdigit() else watcher.seq
+    try:
+        while True:
+            now = watcher.wait(seq, HEARTBEAT)
+            out = b"id: %d\ndata: tree\n\n" % now if now != seq else b":\n\n"
+            handler.wfile.write(out)
+            handler.wfile.flush()
+            seq = now
+    except OSError:
+        return None
 
 
 def get_file(handler: Any, params: dict[str, Any]) -> Any:
@@ -146,6 +194,7 @@ def get_config(handler: Any, params: dict[str, Any]) -> Any:
     state = _state(handler)
     payload = dict(state.config)
     payload["vendor"] = _vendor_status(handler)
+    payload["accent_vars"] = config_mod.accent_vars(state.config)
     payload["root"] = str(state.root) if state.root else None
     payload["initial_file"] = str(state.initial_file) if state.initial_file else None
     payload["dev"] = state.dev
@@ -237,6 +286,7 @@ def dialog(handler: Any, params: dict[str, Any]) -> Any:
 
 ROUTES_GET = {
     "/api/tree": get_tree,
+    "/api/events": get_events,
     "/api/file": get_file,
     "/api/search": get_search,
     "/api/export/check": export_check,
